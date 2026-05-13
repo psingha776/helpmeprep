@@ -56,8 +56,13 @@
       <!-- ============== QUIZ ============== -->
       <section id="quiz">
         <div class="quiz-intro">
-          <h2>Day {{DAY_NUM}} Quiz</h2>
-          <p style="margin-bottom:0">30 questions at exam-level difficulty. Pick an answer to lock your score and see feedback. Click any other option to read its explanation.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+            <h2 style="margin:0">Day {{DAY_NUM}} Quiz</h2>
+            <button class="quiz-reset-btn" onclick="resetQuiz()" title="Reset your score and re-shuffle all choices">
+              ↺ Reset Score &amp; Shuffle
+            </button>
+          </div>
+          <p style="margin-bottom:0">30 questions at exam-level difficulty. Select an answer to lock your score — your progress is saved automatically. Use Reset to start fresh with reshuffled choices.</p>
         </div>
 
         <div class="quiz-progress">

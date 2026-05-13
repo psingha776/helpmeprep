@@ -1029,3 +1029,117 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
   display: block;
   opacity: 1;
 }
+
+/* ====== v1.1 additions ====== */
+
+/* Faded (non-selected, non-correct) choices after answer is locked */
+.choice.faded {
+  opacity: 0.38;
+  cursor: default;
+}
+
+/* Reset button in quiz header */
+.quiz-reset-btn {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 16px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quiz-reset-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+/* "Show all four explanations" details/summary toggle */
+.all-explanations {
+  margin-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+}
+
+.all-explanations summary {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--transition);
+}
+
+.all-explanations summary::-webkit-details-marker { display: none; }
+
+.all-explanations summary::before {
+  content: "▶";
+  font-size: 0.65rem;
+  display: inline-block;
+  transition: transform var(--transition);
+}
+
+.all-explanations[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.all-explanations summary:hover { color: var(--text-primary); }
+
+/* Panel that holds the four explanation rows */
+.all-expl-panel {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideUp 0.25s ease;
+}
+
+/* One row per choice */
+.expl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.expl-item.expl-correct {
+  background: var(--success-soft);
+  border-left: 2px solid var(--success);
+}
+
+.expl-item.expl-wrong {
+  background: var(--error-soft);
+  border-left: 2px solid var(--error);
+}
+
+.expl-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.expl-item strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.expl-text {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 0.875rem;
+}

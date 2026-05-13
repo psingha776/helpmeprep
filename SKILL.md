@@ -1,6 +1,6 @@
 ---
 name: helpmeprep
-description: Build a complete interactive multi-day study hub (HTML/CSS/JS bundle, Brilliant-style dark theme) from a source document — exam research notes or a job description — plus three sizing variables (proficiency, days, hours/day). Produces foundation files (styles.css, quizlib.js, nav.js, index.html) plus one HTML page per study day with embedded 30-question quiz, plus a final day with two timed mock tests. Use this skill whenever the user says /helpmeprep, asks to "make a study hub", "prep me for an exam/interview", "turn this doc into a study deck/course", "build a multi-day prep course", or attaches a syllabus/research doc/JD with timing variables. Trigger even if the user doesn't say "skill" explicitly.
+description: "Build a complete interactive multi-day study hub (HTML/CSS/JS bundle, Brilliant-style dark theme) from a source document — exam research notes or a job description — plus three sizing variables (proficiency, days, hours/day). Produces foundation files (styles.css, quizlib.js, nav.js, index.html) plus one HTML page per study day with embedded 30-question quiz, plus a final day with two timed mock tests. Quiz features (study days only): answer locking with full four-choice explanations panel, localStorage persistence across refreshes, Reset & Shuffle button, confetti celebration on completion. Use this skill whenever the user says /helpmeprep, asks to \"make a study hub\", \"prep me for an exam/interview\", \"turn this doc into a study deck/course\", \"build a multi-day prep course\", or attaches a syllabus/research doc/JD with timing variables. Trigger even if the user doesn't say \"skill\" explicitly."
 ---
 
 ## ON INVOCATION — output this block first (unless all four inputs are already provided)
@@ -218,6 +218,8 @@ Rules:
 ---
 
 **QUESTIONS array** (inject before `<script src="quizlib.js"></script>`):
+
+> **v1.1 quiz behaviour (study days only):** after a choice is selected, all other buttons are disabled. A collapsible "Show all four explanations" panel appears. The user's answers and score persist across page refreshes via `localStorage`. A "Reset Score & Shuffle" button at the top of the quiz section wipes saved state and re-shuffles the choices. A 3-second confetti animation fires when all 30 questions are answered.
 
 ```js
 const QUESTIONS = [
