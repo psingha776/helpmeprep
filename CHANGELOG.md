@@ -7,6 +7,43 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.0] — 2026-05-17
+
+### Added
+- **Spaced Repetition Queue** — wrong answers are automatically pushed to `hmp_review_pool` (localStorage). At the start of each study-day quiz, up to 5 review cards are injected above the main questions with an orange left-border and a `🔁 Review` badge. A "Clear Review Queue" button (with confirmation) lets users reset the pool.
+- **Confidence Self-Rating** — after locking a choice, three confidence buttons appear: `Guessed`, `Sure`, `Certain`. Default is "Sure" if skipped. Flagging rules: `guessed + correct` → Lucky Guess ⭐ (added to review pool); `certain + wrong` → False Certainty ⚠️ (added to review pool). A summary line is shown after all questions are answered.
+- **XP + Levels system** — correct answers earn XP (10 base; 15 for review-card correct; 12 for "Certain" confidence). Five tiers: Beginner → Associate → Practitioner → Architect → Fellow at thresholds 0 / 100 / 300 / 600 / 1000 XP. Toast animations (`+10 XP`) float and fade on correct answers. XP and level are persisted in localStorage and displayed live in the sidebar footer.
+- **Daily streak tracking** — study streak incremented once per calendar day a quiz is attempted. Shown in sidebar footer as `🔥 N-day streak`.
+- **Tiered hint system** — a `💡 Hint` button appears on unanswered questions. Three progressive hints revealed cumulatively (client-side, no authored hint text required): Hint 1 — one wrong choice greyed out; Hint 2 — first sentence of the `explanation`; Hint 3 — domain tag + key phrase from `explanation`. After all three: button disabled and replaced with "All hints used". XP for correct scales: 0 hints → 10, 1 → 7, 2 → 4, 3 → 2.
+- **Domain Mastery Heatmap** — rendered on `index.html` as a canvas block below the day-tile grid. Rows = exam domains, columns = study days. Four-stop colour scale from no-data indigo-tint to `rgba(92,110,248,0.72)` at 71–100% mastery. Data sourced live from per-day localStorage keys written by `quizlib.js`. `HEATMAP_DOMAINS` is populated at generation time from the source document.
+- **Match Pairs question type (`type: "match"`)** — 2 per study day. Four term–definition pairs; left column = shuffled terms as buttons, right column = shuffled definitions. Click one term + one definition to attempt a pair; correct locks green with a connecting line, incorrect shakes and resets. XP: +10 with zero wrong attempts, +5 otherwise. No hints, no confidence rating.
+- **Sequence Ordering question type (`type: "order"`)** — 2 per study day. Drag-and-drop cards with grab handle `⋮⋮`. "Check Order" button below the list. Correct → green; wrong → red with correct position revealed. Two wrong attempts locks the question and reveals the correct order. XP: +10 first attempt, +5 second.
+- **Fill-in-the-Blank question type (`type: "fillblank"`)** — 2 per study day. Underlined blank slot rendered inline in question text. Six-word pill bank; click a word to fill the blank, click blank to return the word. "Submit" locks. XP: +10 correct, +0 wrong. No hints, no confidence rating.
+- **Strict quiz composition** — every study day now contains exactly 30 questions: 24 MCQ + 2 match + 2 order + 2 fillblank. The `type` field is required on every question object.
+- **Lives / Challenge Mode** — opt-in toggle before the first answer on any study day. 5 hearts; each wrong answer removes one heart. 0 hearts → quiz locked with a 1-hour cooldown. Not present on mock pages.
+- **Ask Google button** — appears beneath the explanation for every answered question (correct and wrong) on study days, and on every question in mock retrospection mode. Opens a contextual Google search in a new tab.
+- **Inline Sticky Notes** — `quizlib.js` automatically appends a faint `📌` icon to every `<h2>` and `<h3>` in the study content. Clicking opens a `contenteditable` div auto-saved to `localStorage` (`hmp_note_{dayNum}_{headingSlug}`). A `📝 My Notes` count badge on the day-page header shows saved notes for that day. No markup required — fully runtime-injected.
+- **Mock Completion Canvas** — after both mocks are submitted, a full-screen canvas overlay fires 4-second confetti and shows both mock scores, per-mock pass/fail status, and a motivational close. Dismissible with Escape or the "View Results & Retrospect" button.
+- **Mock Retrospection Mode** — after completion, all questions in both mocks re-render with the user's choice highlighted (green/red), the correct choice highlighted green, and the full `explanation` shown. An "Ask Google for details" button appears beneath each explanation. Choice buttons are non-interactive.
+- **Mock Retry Mode** — a "🔄 Retry Mock Test" button per mock in retrospection. On click: explanations and Ask Google hidden; choices re-enabled and reshuffled; timer resets for that mock only. Full completion canvas does not re-fire on retry.
+
+### Changed
+- **`SKILL.md`** — major revision: added v1.2 tunable variables (`REVIEW_POOL_MAX_PER_DAY`, `CONFIDENCE_*`, `XP_*`, `HINT_XP_PENALTIES`, `HINTS_CLIENT_SIDE`, `HEATMAP_DOMAINS`); updated Step 6 (foundation files), Step 7 (sidecar split + one-file-per-turn batch protocol), and all question-type schemas; abolished the `explanations` array in favour of a single unified `explanation` string on all types; added mock-exclusion invariants and the domain field requirement on every study question.
+- **`QUESTIONS` schema** — `explanations: string[]` (per-choice array) is **abolished**. All question types now use a single `explanation: string` (≤60 words, ≤3 sentences). The `hints` field is **never authored** — hints are derived at runtime by `quizlib.js`.
+- **`README.md`** — fully rewritten for v1.2: feature tables for study days and mock tests, Blueprint design system section, model comparison table (Claude / OpenAI / Gemini), configuration variable reference, and v1.2 what's-new table.
+- **Blueprint Design System** — new visual identity replacing the previous dark theme. Key tokens: deep steel-navy sidebar (`#1e3058`), cool off-white canvas (`#f6f9ff`), indigo accent (`#5c6ef8`), Outfit typeface (via Google Fonts), 24px grid overlay (`rgba(92,110,248,0.05)`), WCAG AA contrast throughout. Orange (`#f97316`) is the only warm colour, used exclusively for review-queue cards.
+- **Batch generation protocol** — changed from whole-day-per-turn to a **sidecar split**: each study day now produces two files per turn — `dayN.html` (shell + study content) and `dayN-quiz.js` (the `QUESTIONS` array). The quiz JS is loaded via `<script src="dayN-quiz.js">` placed immediately before `<script src="quizlib.js">`.
+- **Mock-exclusion rule formalised** — confidence rating, XP toasts, streak, hints, and lives mode are **absolutely prohibited** on all mock pages (attempt, retrospection, and retry).
+
+### Removed
+- Per-choice `explanations` array from all question schemas (replaced by single `explanation` string).
+- "Explore mode" clicking after answer lock (replaced by the explanations panel from v1.1, now unified under the single `explanation` field).
+
+### Not changed
+- `assets/nav.js`, `assets/index-template.html`, `assets/day-template.html`, `assets/mock-template.html`, `assets/quizlib.js`, `assets/styles.css` — template files carry forward from v1.1; v1.2 behaviours are implemented by Claude at generation time per the updated `SKILL.md` protocol.
+
+---
+
 ## [1.1.0] — 2026-05-13
 
 ### Added
@@ -65,5 +102,6 @@ _Nothing yet — contributions welcome._
 ---
 
 <!-- Links -->
+[1.2.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.2
 [1.1.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.1.0
 [1.0.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.0.0
