@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{HUB_TITLE}} · Study Hub</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" class="sidebar-logo">
+        <span class="logo-mark">{{LOGO_3CHAR}}</span>
+        <span>Study Hub</span>
+      </a>
+      <button class="sidebar-toggle" aria-label="Close sidebar" onclick="toggleSidebar()">×</button>
+    </div>
+    <nav class="sidebar-nav" id="navRoot"></nav>
+    <div class="sidebar-footer">
+      Target: <strong style="color:var(--text-secondary)">{{TARGET_LABEL}}</strong>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
+
+  <main class="main">
+    <div class="mobile-bar">
+      <button onclick="toggleSidebar()">☰ Menu</button>
+      <span style="font-weight:600">{{HUB_TITLE}}</span>
+    </div>
+    <div class="main-inner">
+
+      <section class="hero">
+        <div class="hero-eyebrow">{{N}}-Day Sprint · Self-paced</div>
+        <h1 class="hero-title">{{HUB_TITLE}}</h1>
+        <p class="hero-sub">{{HUB_SUBTITLE}}</p>
+        <a href="day1.html" class="btn">Start Day 1 →</a>
+      </section>
+
+      <section>
+        <div class="day-grid">
+          <!-- {{DAY_TILES_START}}
+               One <a class="day-tile"> per day. For day n (mock), use a mock-styled tile.
+               {{DAY_TILES_END}} -->
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0">How to use this hub</h2>
+        <p>Each day's page is split into two sections — <strong>Study</strong> and <strong>Quiz</strong>. Pick a quiet block of about <strong>{{H}} hours</strong> for the study material, then attempt the 30-question quiz at your own pace.</p>
+        <p>On Day {{N}} you'll find two full-length timed mock exams. Hit the score you need three times in a row and you're ready.</p>
+        <div class="badges">
+          {{HUB_BADGES}}
+        </div>
+      </section>
+
+      <section class="callout info">
+        <div class="callout-title">Tip</div>
+        <p style="margin-bottom:0">Read every distractor's explanation — even when you got the answer right. The wrong-answer rationales are where the material's preferred mental models reveal themselves.</p>
+      </section>
+
+    </div>
+  </main>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

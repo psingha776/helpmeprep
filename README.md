@@ -1,224 +1,203 @@
-# helpmeprep
+# 📚 helpmeprep — Interactive Study Hub Builder `v1.2`
 
-> **Turn any exam notes, syllabus, or job description into a fully interactive multi-day study hub in minutes.**
+> **Build a Brilliant-style, Blueprint-themed multi-day study hub from any exam notes, syllabus, or job description — in one prompt.**
 
-`helpmeprep` generates a complete, self-contained, offline-ready HTML/CSS/JS study platform — styled after [Brilliant.org](https://brilliant.org) — from a source document and three sizing variables.
-
-The **assets** (`styles.css`, `quizlib.js`, `nav.js`, and the HTML templates) are fully model-agnostic: any LLM that can follow instructions and write files can drive them. The **`SKILL.md`** file is the Claude-native entry point, using Claude Projects' skill convention for drop-in activation — but the generation logic it contains is plain natural language that ports cleanly to GPT, Gemini, Copilot, or any agentic framework (LangChain, CrewAI, AutoGen, etc.).
+[![Version](https://img.shields.io/badge/version-1.2.0-5c6ef8?style=flat-square)](https://github.com/psingha776/helpmeprep/releases/tag/v1.2)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Skill](https://img.shields.io/badge/type-Claude%20Skill-blueviolet?style=flat-square)](https://docs.anthropic.com)
 
 ---
 
-## What it produces
+## What is helpmeprep?
 
-Given a source document + proficiency + days + hours/day, the skill outputs:
+`helpmeprep` is a **Claude skill** that transforms raw study material into a fully interactive, gamified web-based learning hub — no build tools, no backend, no setup. Drop in your exam blueprint or job description and get a complete multi-day study app with quizzes, progress tracking, mock tests, and retrospection — all as self-contained HTML/CSS/JS files.
 
-| File | Purpose |
+---
+
+## ✨ Features (v1.2)
+
+### 🎓 Study Days
+| Feature | Details |
 |---|---|
-| `index.html` | Landing page with day-grid and "How to use" card |
-| `styles.css` | Full dark-theme design system (Brilliant-style) |
-| `nav.js` | Auto-built collapsible sidebar navigation |
-| `quizlib.js` | Quiz engine — score-locks on first pick, explore mode after |
-| `day1.html` … `day(n−1).html` | Study pages: rich content + 30-question quiz each |
-| `day(n).html` | Two timed full-length mock exams with pass/fail scoring |
+| **Quiz Types** | 30 questions/day — 24 MCQ + 2 Match Pairs + 2 Sequence Order + 2 Fill-in-the-Blank |
+| **Tiered Hints** | 3-level progressive hints (client-side, auto-derived from explanation) |
+| **Spaced Repetition** | Wrong answers auto-queued into a cross-day review pool (up to 5 reviews/day) |
+| **Confidence Rating** | Guessed / Sure / Certain — flags Lucky Guesses (⭐) and False Certainties (⚠️) |
+| **XP + Levels** | Earn XP per correct answer; level up through Beginner → Associate → Practitioner → Architect → Fellow |
+| **Streak Tracking** | Daily study streak with live sidebar display |
+| **Lives / Challenge Mode** | Toggle 5-heart challenge mode; 1-hour lock on 0 hearts |
+| **Sticky Notes** | Per-heading notes auto-saved to localStorage |
+| **Ask Google** | One-click contextual search for every answered question |
+| **Domain Heatmap** | Live canvas heatmap of mastery % per domain per day |
 
-**No build step. No server. No dependencies.** Open `index.html` in any browser.
-
----
-
-## Quick start
-
-### Claude Projects (native)
-
-1. Copy `SKILL.md` into your Claude project's skill folder (e.g. `skills/helpmeprep/SKILL.md`).
-2. Copy the `assets/` folder next to `SKILL.md`.
-3. Trigger in any Claude conversation:
-
-```
-/helpmeprep [attach your-notes.pdf]
-proficiency 4/10 · 7 days · 2 hours/day
-```
-
-Claude will confirm the plan and begin generating files.
-
-### Other LLMs and agentic frameworks
-
-The generation logic in `SKILL.md` is plain natural language — it is not Claude-specific. To use with another model:
-
-| Platform | How to use |
+### 🧪 Mock Tests
+| Feature | Details |
 |---|---|
-| **ChatGPT / Copilot / Gemini** | Paste the contents of `SKILL.md` as a system prompt or custom instruction |
-| **LangChain / CrewAI / AutoGen** | Use the Step 1–7 protocol as your agent's task prompt; point file-write tools at the `assets/` folder |
-| **Any agentic framework** | Feed `SKILL.md` as context, provide the `assets/` templates as static resources, and invoke with the four inputs |
+| **Timed Mock** | Mirrors real exam format (question count, time limit, pass mark from source) |
+| **Completion Canvas** | Confetti + score reveal after both mocks complete |
+| **Retrospection Mode** | Full review of all answers with explanations + Ask Google |
+| **Retry Mode** | Re-attempt any mock with reshuffled choices and reset timer |
+| **Clean Separation** | No XP, hints, confidence, lives, or streaks on mock pages — ever |
 
-The `assets/` files (CSS, JS, HTML templates) require no modification regardless of which model drives them.
+### 🎨 Blueprint Design System
+- Deep navy sidebar (`#1e3058`) vs. cool off-white canvas (`#f6f9ff`)
+- Indigo accent (`#5c6ef8`) throughout — never warm, never orange (except review queue)
+- Outfit typeface (geometric sans) at varying weights — no serif
+- Signature 24px grid overlay on canvas
+- WCAG AA accessible contrast on all text/background pairs
 
 ---
 
-## Inputs
+## 🚀 Usage
 
-| Input | Description | Example |
+### Trigger Phrases
+Any of the following activates the skill in Claude:
+```
+/helpmeprep
+"make a study hub"
+"prep me for an exam"
+"turn this doc into a study deck"
+"build a multi-day prep course"
+```
+
+### Required Inputs
+```
+Source     Attach or paste your exam notes, syllabus, or job description.
+x / 10     Your current proficiency (0 = none, 10 = expert).
+n days     Total days in the plan (days 1–(n−1) = study, day n = mock tests).
+h hrs/day  Hours of study material per day (quiz time is not counted).
+```
+
+### Example
+```
+/helpmeprep [attach CCA-F-exam-notes.pdf]
+proficiency 4/10 · 7 days · 3 hours/day
+```
+
+### Output Structure
+```
+outputs/{topic-slug}/
+├── styles.css          # Blueprint design system — all tokens
+├── quizlib.js          # Quiz engine — all question types, XP, hints, review pool
+├── nav.js              # Sidebar navigation + XP/streak display
+├── index.html          # Hub landing page with day tiles + domain heatmap
+├── day1.html           # Study day 1
+├── day2.html           # Study day 2
+│   ...
+└── day{n}.html         # Mock test day (2 × timed mocks)
+```
+
+---
+
+## 🤖 Model Comparison — Files per Single Batch
+
+> **"Files per batch"** = how many complete helpmeprep day-pages (≈ 20K output tokens each) a model can generate in a single API call before hitting its max output limit. Higher = fewer round-trips, smoother end-to-end generation.
+>
+> **Rating scale:** ⭐ = partial file only (chunking required) · ⭐⭐ = 1–2 files · ⭐⭐⭐ = 3–4 files · ⭐⭐⭐⭐ = 5–6 files · ⭐⭐⭐⭐⭐ = 7+ files
+
+---
+
+### 🔵 Claude (Anthropic)
+
+| Model | Max Output Tokens | Files per Batch | Rating |
+|---|---|---|---|
+| Claude Haiku 4.5 | 64,000 | ~3 | ⭐⭐⭐ |
+| Claude Sonnet 4.6 *(default)* | 64,000 | ~3 | ⭐⭐⭐ |
+| Claude Opus 4.6 | 128,000 | ~6 | ⭐⭐⭐⭐ |
+| Claude Opus 4.7 *(flagship)* | 128,000 | ~6 | ⭐⭐⭐⭐ |
+
+> 💡 **Batch API bonus (async only):** Opus 4.7, Opus 4.6, and Sonnet 4.6 support up to **300,000 output tokens** via the `output-300k-2026-03-24` beta header on the Message Batches API — theoretically **~15 files/call** at 50% cost discount. Latency up to 24 hours; not suitable for interactive generation sessions.
+
+> ⚠️ **Note:** Sonnet 4.6's synchronous max output is **64K** (same as Haiku 4.5). The 128K ceiling applies only to Opus 4.6 and 4.7. The default `DAYS_IN_BATCH = 2` in the skill is intentionally conservative and appropriate for Sonnet 4.6.
+
+*Source: Anthropic official model docs — platform.claude.com/docs/en/about-claude/models, verified May 2026.*
+
+---
+
+### 🟢 OpenAI (ChatGPT)
+
+| Model | Max Output Tokens | Files per Batch | Rating |
+|---|---|---|---|
+| GPT-4o mini | 16,384 | < 1 | ⭐ |
+| GPT-4.1 mini | 32,768 | ~1 | ⭐⭐ |
+| GPT-4.1 | 32,768 | ~1 | ⭐⭐ |
+| o4-mini | 100,000 | ~5 | ⭐⭐⭐⭐ |
+| o3 | 100,000 | ~5 | ⭐⭐⭐⭐ |
+
+> 🟡 **Note:** GPT-4o mini and the GPT-4.1 family cannot complete a single full helpmeprep day-page in one call. The o-series reasoning models (o3/o4-mini) close the gap significantly with a 100K output cap — matching Claude Opus on raw output capacity.
+
+*Source: OpenAI official docs (platform.openai.com/docs/models/o4-mini), OpenAI Enterprise FAQ. GPT-4.1 output limit confirmed via OpenAI developer community (32,768 tokens).*
+
+---
+
+### 🔴 Gemini (Google)
+
+| Model | Max Output Tokens | Files per Batch | Rating |
+|---|---|---|---|
+| Gemini 2.5 Flash Lite | 65,536 | ~3 | ⭐⭐⭐ |
+| Gemini 2.5 Flash | 65,535 | ~3 | ⭐⭐⭐ |
+| Gemini 2.5 Pro | 65,536 | ~3 | ⭐⭐⭐ |
+
+> ℹ️ **Deprecation note:** Gemini 2.0 Flash and Gemini 1.5 Pro are **shutting down June 1, 2026** and are excluded from this table. The entire current Gemini 2.5 series shares the same ~65K output ceiling across all tiers.
+
+*Source: OpenRouter (Gemini 2.5 Flash, 65,535 max output), Oracle OCI Generative AI docs (Gemini 2.5 Flash-Lite, 65,536 max output), May 2026.*
+
+---
+
+### 📊 Cross-Model Summary
+
+| Provider | Best Model | Max Output | Files/Batch | Suitable for helpmeprep? |
+|---|---|---|---|---|
+| **Anthropic Claude** | Opus 4.7 | 128K (300K async) | 6 (15 async) | ✅ Best fit — native skill |
+| **OpenAI** | o3 / o4-mini | 100K | ~5 | ✅ Viable with adaptation |
+| **Google Gemini** | 2.5 Pro / Flash | ~65K | ~3 | ⚠️ Viable, smaller batches |
+| **OpenAI** | GPT-4.1 / 4.1 mini | 32K | ~1 | ⚠️ Requires multi-call stitching |
+| **OpenAI** | GPT-4o mini | 16K | < 1 | ❌ Requires heavy chunking |
+
+---
+
+## 📦 What's New in v1.2
+
+| # | Feature | Description |
 |---|---|---|
-| **Source** | Attach or paste exam notes, a syllabus, or a job description (PDF, .md, .txt, .docx, or pasted text) | `notes.pdf` |
-| **x / 10** | Your current proficiency (0 = none, 10 = expert). Controls tone and analogy depth. | `3` |
-| **n days** | Total days in the plan. Days 1–(n−1) = study + quiz. Day n = timed mocks. | `7` |
-| **h hrs/day** | Hours of study material per day (quiz time is not counted). | `2` |
-
-### Trigger phrases
-
-The skill fires on any of:
-
-- `/helpmeprep`
-- "make a study hub"
-- "prep me for an exam" / "prep me for an interview"
-- "turn this doc into a study deck / course"
-- "build a multi-day prep course"
-- Attaching a syllabus/research doc/JD with timing variables
+| 1 | **Spaced Repetition Queue** | Wrong answers auto-enter `hmp_review_pool`; up to 5 review cards injected at top of next study sessions |
+| 2 | **Confidence Self-Rating** | Per-question Guessed / Sure / Certain rating with Lucky Guess ⭐ and False Certainty ⚠️ flagging |
+| 3 | **XP + Streak + Levels** | Full gamification — XP per correct answer, daily streak, 5-tier level system with toast animation |
+| 4 | **Tiered Hint System** | 3-level progressive hints (client-side derived); XP penalty scales with hints used |
+| 5 | **Domain Heatmap** | Canvas-rendered mastery grid — domain × day, live from localStorage |
+| 6 | **Match / Order / Fill-Blank** | Three new question types added alongside MCQ; strict 24+2+2+2 composition per day |
+| 7 | **Lives / Challenge Mode** | Toggle 5-heart stakes mode per day session; 1-hour lockout on 0 hearts |
+| 8 | **Ask Google** | Contextual Google search button on every answered question (study) and retrospection (mock) |
+| 9 | **Inline Sticky Notes** | Per-heading contenteditable notes auto-saved to localStorage |
+| 10 | **Mock Retrospection + Retry** | Post-completion canvas, full answer review, per-mock retry with reshuffled choices |
+| 11 | **Blueprint Theme** | New design system — steel-navy sidebar, indigo accent, Outfit typeface, 24px grid overlay |
 
 ---
 
-## What gets generated — in detail
+## 🛠 Configuration Variables
 
-### Study days (day 1 to n−1)
-
-Each page contains:
-
-- **Page hero** — day number, domain label, estimated hours
-- **Study section** — `WORDS_PER_HOUR × h` words of content (code/tables excluded) using:
-  - `<h2>` / `<h3>` section hierarchy
-  - `.card` concept boxes
-  - `.callout` asides (info / success / warn / error)
-  - `.example` worked examples with syntax-tinted `<pre><code>` blocks
-  - `.badges` mental-model tags
-  - `.table-wrap` tables
-- **Key takeaways** — 5–8 bullet summary at the end of each study section
-- **Further reading** — 3–6 curated links (official docs + YouTube) per day
-- **30-question quiz** — exam-level distractors, per-choice explanations, score locks on first pick, explore mode thereafter, sticky progress bar
-
-### Mock day (day n)
-
-- Two independent timed exams (no question reuse between mocks)
-- Same domain-weight distribution across both mocks
-- Countdown timer with colour warnings (yellow → red)
-- Submit manually or auto-submit on timeout
-- Per-question explanations revealed on submit
-- Pass / fail verdict with score display
-
----
-
-## Supported source types
-
-| Type | How it's detected |
-|---|---|
-| **Exam / research doc** | Domain weights %, sample questions, "exam covers", chapters, passing score, test format |
-| **Job description (JD)** | Responsibilities, requirements, years of experience, company name + role title, benefits |
-
-- **Exam source** → mirrors the real exam exactly (question style, distractor sophistication, domain weight distribution, pass mark).
-- **JD source** → difficulty scales with stated YoE (entry / mid / senior / staff). Mock defaults: 30 questions, 60 minutes, 70% pass mark.
-
----
-
-## Tunable variables
-
-Edit these in `SKILL.md` to change global defaults:
+Editable in `SKILL.md` to tune defaults:
 
 ```
-WORDS_PER_HOUR        = 1200    # study content target per hour
-EXPLANATION_MAX_WORDS = 35      # per-choice explanation hard cap
-BATCH_SIZE            = 2       # day-page files per generation batch
-QUIZ_PER_DAY          = 30      # quiz questions per study day
-JD_MOCK_QUESTIONS     = 30      # questions per mock (JD source)
-JD_MOCK_MINUTES       = 60      # minutes per mock (JD source)
-JD_MOCK_PASSMARK      = 0.70    # pass fraction (JD source)
+DAYS_IN_BATCH         = 2      # day-pages per generation batch (silent)
+QUIZ_PER_DAY          = 30     # questions per study day
+QUIZ_TYPE_BREAKDOWN   = { mcq: 24, match: 2, order: 2, fillblank: 2 }
+REVIEW_POOL_MAX_PER_DAY = 5    # max review cards per session
+XP_PER_CORRECT        = 10
+XP_LEVEL_THRESHOLDS   = [0, 100, 300, 600, 1000]
+XP_LEVEL_LABELS       = ["Beginner","Associate","Practitioner","Architect","Fellow"]
+HINT_XP_PENALTIES     = [10, 7, 4, 2]   # XP with 0/1/2/3 hints used
+JD_MOCK_QUESTIONS     = 30
+JD_MOCK_MINUTES       = 60
+JD_MOCK_PASSMARK      = 0.70
 ```
 
 ---
 
-## Generation protocol
+## 📄 License
 
-1. The model reads source + resume (if present) once at the start — not again.
-2. Foundation files (`styles.css`, `quizlib.js`, `nav.js`, `index.html`) are generated first and presented immediately.
-3. Day pages are generated in **batches of 2**. After each batch the model pauses and asks what to do next — you can review, request edits, or continue.
-4. The mock day is always the final batch.
-
-> **Hard stop between batches** — the model will not auto-continue to the next batch. This is intentional to let you review and save files progressively.
+MIT © [Pranoy Singha](https://linkedin.com/in/psingha776)
 
 ---
 
-## File structure
-
-```
-helpmeprep/
-├── SKILL.md              ← Claude-native entry point (also portable to other LLMs)
-├── README.md             ← This file
-├── CONTRIBUTING.md       ← How to contribute
-├── LICENSE               ← MIT
-└── assets/
-    ├── styles.css        ← Complete dark-theme design system (model-agnostic)
-    ├── quizlib.js        ← Quiz engine (model-agnostic)
-    ├── nav.js            ← Sidebar navigation builder (model-agnostic)
-    ├── index-template.html   ← Landing page template
-    ├── day-template.html     ← Study day template
-    └── mock-template.html    ← Mock exam template
-```
-
----
-
-## Examples
-
-### Exam prep (7-day CCA-F sprint)
-
-```
-/helpmeprep [attach cca-f-research-notes.pdf]
-proficiency 2/10 · 7 days · 2 hours/day
-```
-
-Produces: `index.html` + `day1.html`–`day7.html` (6 study days × 30 quiz questions) + `day8.html` (2 × 60 questions, 120 min, 72% pass mark).
-
-### Interview prep from a JD (5-day plan)
-
-```
-/helpmeprep [paste JD text]
-proficiency 6/10 · 5 days · 1.5 hours/day
-```
-
-Produces: `index.html` + `day1.html`–`day4.html` (4 study days × 30 quiz questions) + `day5.html` (2 × 30 questions, 60 min, 70% pass mark).
-
----
-
-## Design system overview
-
-The `styles.css` implements a complete dark-theme design system with:
-
-- CSS custom properties for easy theming (`--bg-primary`, `--accent`, `--success`, etc.)
-- Responsive sidebar (sticky desktop / slide-in mobile)
-- Card, callout, example, badge, table, progress-bar, timer, and results components
-- Smooth animations and transitions
-- Mobile-first breakpoints at 900px and 480px
-
-To retheme, override the `:root` variables at the top of `styles.css`.
-
----
-
-## Requirements
-
-**Claude Projects (native path)**
-- A Claude Project or API access with file reading enabled.
-- The `assets/` folder must sit alongside `SKILL.md` at `skills/helpmeprep/assets/`.
-- Output goes to `/mnt/user-data/outputs/{topic-slug}/` by default.
-
-**Other LLMs / frameworks**
-- Any model with sufficient context window to hold `SKILL.md` + source document.
-- A file-write mechanism so the model can produce the output HTML/CSS/JS files.
-- The `assets/` folder accessible as static resources at generation time.
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE).
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+*Built with Claude Sonnet 4.6 · Skill version 1.2.0 · Blueprint Design System · Model specs verified May 2026*
