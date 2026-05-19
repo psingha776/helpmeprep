@@ -1,6 +1,6 @@
 ---
 name: helpmeprep
-description: "Build an interactive multi-day study hub (HTML/CSS/JS, Blueprint theme) from exam notes or a job description. Produces styles.css, quizlib.js, nav.js, index.html, one page per study day (30-question quiz: MCQ, match, sequence, fill-blank), and a timed mock-test day. Study features: tiered hints, spaced repetition, confidence rating, XP/streak/levels, lives mode, sticky notes, domain heatmap, Ask Google. Mock features: completion canvas, retrospection, retry. Trigger for /helpmeprep, \"make a study hub\", \"prep me for an exam/interview\", \"turn this doc into a study deck\", \"build a multi-day prep course\", or any syllabus/JD with timing variables — even without the word \"skill\"."
+description: "v1.3 — Build an interactive multi-day study hub (HTML/CSS/JS, Blueprint theme) from exam notes or a job description. Produces styles.css, quizlib.js, nav.js, index.html, one page per study day (30-question quiz: MCQ, match, sequence, fill-blank), and a timed mock-test day. Study features: tiered hints, spaced repetition, confidence rating, XP/streak/levels, lives mode, sticky notes, domain heatmap, Ask Google. Mock features: completion canvas, retrospection, retry. v1.3 fixes: Blueprint theme active on day pages, mode-toggle pill styling, hint-btn/hint-box CSS, hint-greyed rule, btn link-color isolation, confidence traffic-light buttons, match partial-state re-render bug, full match/order/fillblank CSS, inlineFmt markdown link support. Trigger for /helpmeprep, \"make a study hub\", \"prep me for an exam/interview\", \"turn this doc into a study deck\", \"build a multi-day prep course\", or any syllabus/JD with timing variables — even without the word \"skill\"."
 ---
 
 ## ON INVOCATION — output this block first (unless all four inputs are already provided)
@@ -212,50 +212,42 @@ Start from `assets/day-template.html`. Replace every `{{…}}` placeholder.
 
 | Placeholder | Value |
 |---|---|
-| `{{DAY_NUM}}` | Day number |
+| `{{DAY_NUM}}` | Day number (integer) |
 | `{{DAY_TITLE}}` | Day title |
 | `{{DAY_DOMAIN}}` | Parent topic / domain |
 | `{{H}}` | Hours from input |
 | `{{LOGO_3CHAR}}` | Monogram |
 | `{{TARGET_LABEL}}` | Target string |
+| `{{DAY_QUIZ_FILE}}` | `dayN-quiz.js` where N = day number |
 
-**Study section** (between `{{STUDY_CONTENT_START}}` / `{{STUDY_CONTENT_END}}`):
+**`STUDY_MD` constant** (between `{{STUDY_MD_START}}` / `{{STUDY_MD_END}}`):
 
-- Target ≈ `WORDS_PER_HOUR × h` words. Code blocks and tables are excluded from the word count.
-- **Author in Markdown with callout shorthand** — quizlib.js renders it to Blueprint HTML at runtime. This eliminates verbose HTML tag overhead from the generated file.
-  - Headings: `##`, `###` — rendered as `<h2>`, `<h3>` (sticky-note triggers added by quizlib.js automatically)
-  - Cards: `:::card … :::` → `<div class="card">`
-  - Callouts: `> [!info]`, `> [!warn]`, `> [!success]`, `> [!error]` → styled callout divs
-  - Examples: `:::example … :::` → `<div class="example">`
-  - Code: standard fenced ` ```lang ``` ` blocks → `<pre><code>` with syntax tinting
-  - Badges: `:::badges tag1 | tag2 | tag3 :::` → `<div class="badges">`
-  - Tables: standard Markdown pipe tables → `<div class="table-wrap"><table>`
-- End with a `## Summary` heading followed by 5–8 bullet takeaways.
-- After the summary, append a **Further Reading** block (see **Reference links** rule below).
+Replace the placeholder template string in the `<script>` block with full Markdown content. quizlib.js renders it to Blueprint HTML at runtime — no HTML tags in the generated content. Escape any literal backtick inside content as `` \` ``.
 
-**Inline Concept Sticky Notes** — quizlib.js automatically appends a faint `📌` icon to every `<h2>` and `<h3>` in the study content. Clicking it opens a `contenteditable` div that auto-saves to localStorage (`hmp_note_{dayNum}_{headingSlug}`). Empty notes are deleted on blur. A `"📝 My Notes"` count badge on the day-page header shows saved notes for that day. No markup required in the HTML — quizlib.js handles this entirely.
+Supported Markdown syntax:
 
-**Reference links rule:**
+| Syntax | Renders as |
+|---|---|
+| `## Heading` / `### Heading` | h2/h3 + automatic 📌 sticky-note trigger |
+| `> [!info] Title` + `> body` | Info callout box (also `warn`, `success`, `error`) |
+| `EXAMPLE: text` | Example block |
+| ` ```lang … ``` ` | Fenced code block |
+| `\| col \| col \|` table | Responsive table |
+| `[badge] [badge]` | Badge pill row |
+| `- item` / `1. item` | Bullet / ordered list |
+| `**bold**` `*italic*` `` `code` `` | Inline formatting |
 
-After the `<section class="summary">`, append a Further Reading block using this exact markup:
+Target ≈ `WORDS_PER_HOUR × h` words (code + tables excluded). End with `## Key Takeaways` (5–8 bullets) then `## Further Reading` (3–6 links, `📄` web / `▶` YouTube). Only include links you are highly confident exist; for uncertain YouTube links use `https://www.youtube.com/results?search_query=topic+keywords`.
 
-```html
-<section class="references">
-  <h3>Further Reading</h3>
-  <ul class="ref-list">
-    <li><a href="URL" target="_blank" rel="noopener" class="ref-link ref-web">📄 Title — site.com</a></li>
-    <li><a href="https://www.youtube.com/watch?v=ID" target="_blank" rel="noopener" class="ref-link ref-yt">▶ Video title — YouTube</a></li>
-  </ul>
-</section>
+**`dayN-quiz.js` sidecar:**
+
+```js
+const QUESTIONS = [
+  // 30 typed question objects — see schema below
+];
 ```
 
-Rules:
-- Include 3–6 links per day: mix of authoritative web pages (official docs, well-known tutorials, reputable reference sites) and YouTube videos where a visual/walkthrough would genuinely help.
-- Use `class="ref-link ref-web"` for web links, `class="ref-link ref-yt"` for YouTube links.
-- Prefix web links with `📄`, YouTube links with `▶`.
-- **Only include links you are highly confident exist and are publicly accessible.** Do not hallucinate URLs. For YouTube, link to the channel's standard URL pattern (e.g. a real video ID) — if uncertain, link to a relevant search: `https://www.youtube.com/results?search_query=topic+keywords`.
-- Prefer official docs, MDN, W3Schools, GeeksforGeeks, Coursera/freeCodeCamp articles, or well-known topic-specific sites. Match the day's domain exactly — do not include generic links.
-- If `web_search` is available, use it to find 1–2 real, current URLs per day before writing the block.
+No other code in the sidecar file.
 
 ---
 
@@ -433,6 +425,25 @@ Font stack: `'Outfit', system-ui, sans-serif`. Code: `'JetBrains Mono', 'Cascadi
 - Explanation block: `background: rgba(92,110,248,0.07); border-left: 3px solid #5c6ef8; border-radius: 0 6px 6px 0`.
 
 ---
+
+---
+
+## v1.3 Fix Registry
+
+*Asset files (`styles.css`, `quizlib.js`) already incorporate all fixes below. This section exists for audit/diff purposes.*
+
+| # | File | Issue | Fix |
+|---|---|---|---|
+| 1 | `styles.css` | `.app.blueprint` class was a no-op — day pages rendered in dark theme | Added `.app.blueprint {}` block remapping all `--bg-*`/`--text-*`/`--accent` tokens to Blueprint palette; added `body:has(.app.blueprint)` for body background |
+| 2 | `styles.css` | `.mode-btn` had no CSS — browser defaults only | Redesigned as segmented pill capsule; Normal → indigo gradient; Challenge → fire-orange gradient |
+| 3 | `styles.css` | `.hint-btn`, `.hint-box`, `.hint-label` had no CSS | Styled with amber pill button, tinted reveal container, uppercase tier label |
+| 4 | `styles.css` | `.choice.hint-greyed` class added by quizlib.js but no rule backed it | Added `opacity: 0.25; pointer-events: none; filter: grayscale(0.5)` |
+| 5 | `styles.css` | "Start Day 1" `.btn` `<a>` tag got indigo text from `a { color: var(--accent) }` (invisible on indigo btn) | Scoped to `a:not(.btn):not(.btn-secondary)`; added `.blueprint .btn { color: #fff }` |
+| 6 | `styles.css` | `.conf-btn`, `.conf-row`, `.conf-label` had no CSS | Traffic-light semantics: Guessed=coral, Sure=amber, Certain=emerald with glow rings |
+| 7 | `quizlib.js` | `renderMatch()` re-rendered all pairs as live buttons regardless of `qd.matched` — already-matched pairs reappeared after partial-match re-renders | Built `matchedTerms`/`matchedDefs` Sets from `qd.matched` before rendering; locked matched buttons with `correct-pair` + `disabled` |
+| 8 | `styles.css` | All match/order/fillblank interactive classes had zero CSS | Full styling pass: `.match-term-btn`, `.match-def-btn`, `.match-cols`, `.order-item`, `.drag-handle`, `.btn-check`, `.word-pill`, `.blank-slot`, `.btn-submit-blank`, `.show-explanation`, `.explanation-text`, `.ag`, `.shake` |
+| 9 | `quizlib.js` | `inlineFmt()` had no regex for `[text](url)` — all hyperlinks in Further Reading rendered as raw text | Added `.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" ...>$1</a>')` before bold/italic/code replacements |
+
 
 ## Key invariants
 

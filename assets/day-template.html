@@ -4,10 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Day {{DAY_NUM}} · {{DAY_TITLE}} — Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-<div class="app">
+<body data-day="{{DAY_NUM}}">
+<div class="app blueprint">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="index.html" class="sidebar-logo">
@@ -17,52 +20,105 @@
       <button class="sidebar-toggle" aria-label="Close sidebar" onclick="toggleSidebar()">×</button>
     </div>
     <nav class="sidebar-nav" id="navRoot"></nav>
-    <div class="sidebar-footer">
-      Target: <strong style="color:var(--text-secondary)">{{TARGET_LABEL}}</strong>
-    </div>
+    <div class="sidebar-footer" id="xpDisplay"></div>
   </aside>
   <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
 
   <main class="main">
+    <div class="grid-ov"></div>
     <div class="mobile-bar">
       <button onclick="toggleSidebar()">☰ Menu</button>
       <span style="font-weight:600">Day {{DAY_NUM}}</span>
     </div>
-    <div class="main-inner">
+    <div class="main-inner" style="position:relative;z-index:1">
 
       <section class="page-hero">
         <div class="page-eyebrow">Day {{DAY_NUM}} · {{DAY_DOMAIN}}</div>
-        <h1 class="page-title">{{DAY_TITLE}}</h1>
+        <h1 class="page-title">{{DAY_TITLE}} <span id="notesBadge" class="notes-badge" style="display:none"></span></h1>
         <p class="page-meta">Roughly <strong>{{H}} hours</strong> of study + a 30-question quiz when you're ready.</p>
       </section>
 
-      <!-- ============== STUDY ============== -->
+      <!-- ── STUDY CONTENT ── -->
       <section id="study">
         <!--
-          {{STUDY_CONTENT_START}}
-          Build the study section here using only the components in styles.css:
-            <h2>, <h3>, <p>, <ul>, <ol>
-            <div class="card">…</div>
-            <div class="callout [info|success|warn|error]"><div class="callout-title">…</div>…</div>
-            <div class="example"><div class="example-label">EXAMPLE</div>…</div>
-            <pre><code>…</code></pre>
-            <div class="badges"><span class="badge">…</span></div>
-            <div class="table-wrap"><table>…</table></div>
-          End with <section class="summary"> listing 5–8 key takeaways.
-          {{STUDY_CONTENT_END}}
+          Generate the STUDY_MD JavaScript constant below.
+          Use Markdown with Blueprint callout extensions:
+
+          ## Heading 2                    → <h2> with sticky note trigger
+          ### Heading 3                   → <h3> with sticky note trigger
+          > [!info] Title                 → info callout box
+          > content line                  → (continues callout; multiple > lines allowed)
+          > [!warn] / > [!success] / > [!error]  → other callout variants
+          EXAMPLE: text                   → example block
+          ```lang                         → fenced code block
+          code here
+          ```
+          | col | col |                   → table (with separator row)
+          | --- | --- |
+          [badge] [badge]                 → badge pill row
+          **bold** *italic* `code`        → inline formatting
+          - item / 1. item                → lists
+          Regular paragraph text          → <p>
+
+          Target ≈ WORDS_PER_HOUR × h words (code + tables excluded).
+          End with a ## Key Takeaways section listing 5–8 bullet points.
+          After the takeaways, add a ## Further Reading section:
+            - 3–6 links mixing official docs and YouTube
+            - Prefix web links with 📄, YouTube with ▶
+            - Only include links you are highly confident exist
         -->
       </section>
 
-      <!-- ============== QUIZ ============== -->
+      <script>
+      /* {{STUDY_MD_START}}
+         Replace the template string below with the full Markdown content.
+         Escape any backticks inside the content as \`.
+         {{STUDY_MD_END}} */
+      const STUDY_MD = `
+## Study Content
+
+Replace this placeholder with the actual day content in Markdown format.
+Use headings, callouts, examples, code blocks, and tables as needed.
+
+> [!info] Getting Started
+> This is an example callout. Replace with real content.
+
+## Key Takeaways
+
+- Takeaway 1
+- Takeaway 2
+- Takeaway 3
+
+## Further Reading
+
+📄 [Official Documentation](https://docs.example.com) — docs.example.com
+▶ [Intro Video](https://www.youtube.com/results?search_query=topic) — YouTube
+      `;
+      </script>
+      <div id="studyRendered"></div>
+
+      <!-- ── QUIZ ── -->
       <section id="quiz">
         <div class="quiz-intro">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px">
             <h2 style="margin:0">Day {{DAY_NUM}} Quiz</h2>
-            <button class="quiz-reset-btn" onclick="resetQuiz()" title="Reset your score and re-shuffle all choices">
-              ↺ Reset Score &amp; Shuffle
-            </button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="quiz-reset-btn" onclick="resetQuiz()" title="Reset score and re-shuffle">↺ Reset</button>
+              <button class="quiz-reset-btn" onclick="clearReviewQueue()" title="Clear spaced-review queue">🗑 Clear Review</button>
+            </div>
           </div>
-          <p style="margin-bottom:0">30 questions at exam-level difficulty. Select an answer to lock your score — your progress is saved automatically. Use Reset to start fresh with reshuffled choices.</p>
+
+          <!-- Lives / Challenge mode toggle -->
+          <div class="mode-toggle">
+            <span style="font-size:0.82rem;color:var(--mu)">Mode:</span>
+            <button class="mode-btn active" data-mode="normal">📖 Normal</button>
+            <button class="mode-btn" data-mode="challenge">🔥 Challenge</button>
+          </div>
+
+          <!-- Hearts row (challenge mode only) -->
+          <div class="hearts-row" id="heartsRow" style="display:none"></div>
+
+          <p style="margin-bottom:0;font-size:0.9rem">30 questions at exam-level difficulty. Your progress is saved automatically.</p>
         </div>
 
         <div class="quiz-progress">
@@ -81,27 +137,7 @@
 </div>
 
 <script src="nav.js"></script>
-<script>
-/* {{QUESTIONS_START}}
-   Inject 30 question objects. correct = 0-based index of correct choice.
-   explanations[i]: ≤35 words / 2 sentences — why choice i is right or wrong.
-   All four choices must be comparable in length and plausibility.
-   {{QUESTIONS_END}} */
-const QUESTIONS = [
-  {
-    text: "Sample question stem — replace with real items.",
-    choices: ["Choice A", "Choice B", "Choice C", "Choice D"],
-    correct: 2,
-    explanations: [
-      "Why A is wrong.",
-      "Why B is wrong.",
-      "Why C is correct.",
-      "Why D is wrong."
-    ]
-  }
-  // ... 29 more
-];
-</script>
+<script src="{{DAY_QUIZ_FILE}}"></script>
 <script src="quizlib.js"></script>
 </body>
 </html>

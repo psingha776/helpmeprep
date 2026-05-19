@@ -4,10 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Day {{DAY_NUM}} · Mock Tests — Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-<div class="app">
+<body data-day="{{DAY_NUM}}">
+<div class="app blueprint">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="index.html" class="sidebar-logo">
@@ -17,18 +20,17 @@
       <button class="sidebar-toggle" aria-label="Close sidebar" onclick="toggleSidebar()">×</button>
     </div>
     <nav class="sidebar-nav" id="navRoot"></nav>
-    <div class="sidebar-footer">
-      Target: <strong style="color:var(--text-secondary)">{{TARGET_LABEL}}</strong>
-    </div>
+    <div class="sidebar-footer" id="xpDisplay"></div>
   </aside>
   <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
 
   <main class="main">
+    <div class="grid-ov"></div>
     <div class="mobile-bar">
       <button onclick="toggleSidebar()">☰ Menu</button>
       <span style="font-weight:600">Day {{DAY_NUM}} · Mocks</span>
     </div>
-    <div class="main-inner">
+    <div class="main-inner" style="position:relative;z-index:1">
 
       <section class="page-hero">
         <div class="page-eyebrow">Day {{DAY_NUM}} · Final Stretch</div>
@@ -38,50 +40,51 @@
           <strong>{{MOCK_QCOUNT}} questions</strong> · <strong>{{MOCK_MINUTES}} minutes</strong> each ·
           pass mark <strong>{{MOCK_PASSMARK}}</strong>.
         </p>
+        <p style="font-size:0.82rem;color:var(--mu);margin-top:6px">
+          ℹ️ Your answers and timer are saved automatically — refreshing the page will resume your session.
+        </p>
       </section>
 
-      <!-- ============== MOCK 1 ============== -->
+      <!-- ── MOCK 1 ── -->
       <section id="mock1">
-        <div class="quiz-intro">
+        <div class="quiz-intro" id="mock1Intro">
           <h2>Mock Test 1</h2>
           <p style="margin-bottom:0">Click <em>Start Mock 1</em> when you're ready. The timer begins immediately.</p>
           <div style="margin-top:14px">
-            <button class="btn" onclick="startMock(1)">Start Mock 1</button>
+            <button class="btn" onclick="startMock(1)">▶ Start Mock 1</button>
           </div>
         </div>
-
         <div id="mock1Body" style="display:none">
           <div class="mock-controls">
             <div class="mock-info">Mock Test 1 · {{MOCK_QCOUNT}} questions</div>
             <div class="timer" id="timer1">{{MOCK_MINUTES}}:00</div>
-            <button class="btn" onclick="submitMock(1)">Submit Mock 1</button>
+            <button class="btn" id="mock1SubmitBtn" onclick="submitMock(1)">Submit Mock 1</button>
           </div>
           <div id="mock1Questions"></div>
-          <div style="text-align:center; margin: 24px 0">
+          <div style="text-align:center;margin:24px 0">
             <button class="btn" onclick="submitMock(1)">Submit Mock 1</button>
           </div>
           <div class="results" id="mock1Results"></div>
         </div>
       </section>
 
-      <!-- ============== MOCK 2 ============== -->
+      <!-- ── MOCK 2 ── -->
       <section id="mock2" style="margin-top:48px">
-        <div class="quiz-intro">
+        <div class="quiz-intro" id="mock2Intro">
           <h2>Mock Test 2</h2>
           <p style="margin-bottom:0">A second, independently-shuffled set. Take it after a break.</p>
           <div style="margin-top:14px">
-            <button class="btn" onclick="startMock(2)">Start Mock 2</button>
+            <button class="btn" onclick="startMock(2)">▶ Start Mock 2</button>
           </div>
         </div>
-
         <div id="mock2Body" style="display:none">
           <div class="mock-controls">
             <div class="mock-info">Mock Test 2 · {{MOCK_QCOUNT}} questions</div>
             <div class="timer" id="timer2">{{MOCK_MINUTES}}:00</div>
-            <button class="btn" onclick="submitMock(2)">Submit Mock 2</button>
+            <button class="btn" id="mock2SubmitBtn" onclick="submitMock(2)">Submit Mock 2</button>
           </div>
           <div id="mock2Questions"></div>
-          <div style="text-align:center; margin: 24px 0">
+          <div style="text-align:center;margin:24px 0">
             <button class="btn" onclick="submitMock(2)">Submit Mock 2</button>
           </div>
           <div class="results" id="mock2Results"></div>
@@ -94,132 +97,264 @@
 
 <script src="nav.js"></script>
 <script>
+/* ── CONFIG (substituted by skill generation) ── */
 /* {{MOCK_CONFIG_START}} */
 const MOCK_MINUTES  = {{MOCK_MINUTES}};
-const MOCK_PASSMARK = {{MOCK_PASSMARK_NUM}};   // numeric: e.g. 0.72 for 72%
+const MOCK_PASSMARK = {{MOCK_PASSMARK_NUM}};
 /* {{MOCK_CONFIG_END}} */
 
 /* {{MOCK1_QUESTIONS_START}} */
 const MOCK1 = [
-  // {{MOCK_QCOUNT}} items, shape: { text, choices:[A,B,C,D], correct: 0-3, explanation: "..." }
+  /* {{MOCK_QCOUNT}} items — shape: { text, choices:[A,B,C,D], correct:0-3, explanation:"string" } */
 ];
 /* {{MOCK1_QUESTIONS_END}} */
 
 /* {{MOCK2_QUESTIONS_START}} */
 const MOCK2 = [
-  // {{MOCK_QCOUNT}} items, same shape
+  /* {{MOCK_QCOUNT}} items — same shape, no question reuse */
 ];
 /* {{MOCK2_QUESTIONS_END}} */
 
+/* ── PERSISTENCE HELPERS ── */
+function mockKey(n){ return `hmp_mock_${n}`; }
+
+function persistMock(n){
+  const s=mockState[n];
+  try{
+    localStorage.setItem(mockKey(n), JSON.stringify({
+      answers: s.answers,
+      secondsLeft: s.secondsLeft,
+      started: s.started,
+      submitted: s.submitted,
+      correct: s.correct
+    }));
+  }catch{}
+}
+
+function loadMockPersisted(n){
+  try{
+    const raw=localStorage.getItem(mockKey(n));
+    if(raw){ const d=JSON.parse(raw); Object.assign(mockState[n],d); return true; }
+  }catch{}
+  return false;
+}
+
+function clearMockPersisted(n){ try{localStorage.removeItem(mockKey(n));}catch{} }
+
+/* ── STATE ── */
 const mockState = {
-  1: { answers: {}, started: false, submitted: false, timer: null, secondsLeft: MOCK_MINUTES * 60 },
-  2: { answers: {}, started: false, submitted: false, timer: null, secondsLeft: MOCK_MINUTES * 60 },
+  1: { answers:{}, started:false, submitted:false, timer:null, secondsLeft:MOCK_MINUTES*60, correct:0 },
+  2: { answers:{}, started:false, submitted:false, timer:null, secondsLeft:MOCK_MINUTES*60, correct:0 },
 };
 
-function questionsFor(n)   { return n === 1 ? MOCK1 : MOCK2; }
-function bodyEl(n)         { return document.getElementById("mock" + n + "Body"); }
-function questionsEl(n)    { return document.getElementById("mock" + n + "Questions"); }
-function timerEl(n)        { return document.getElementById("timer" + n); }
-function resultsEl(n)      { return document.getElementById("mock" + n + "Results"); }
+/* ── ELEMENT REFS ── */
+const bodyEl   = n => document.getElementById(`mock${n}Body`);
+const introEl  = n => document.getElementById(`mock${n}Intro`);
+const qEl      = n => document.getElementById(`mock${n}Questions`);
+const timerEl  = n => document.getElementById(`timer${n}`);
+const resultsEl= n => document.getElementById(`mock${n}Results`);
+const questionsFor = n => n===1?MOCK1:MOCK2;
 
-function startMock(n) {
-  const s = mockState[n];
-  if (s.started) return;
-  s.started = true;
-  bodyEl(n).style.display = "block";
-  renderMockQuestions(n);
-  bodyEl(n).scrollIntoView({ behavior: "smooth", block: "start" });
-  s.timer = setInterval(() => tickTimer(n), 1000);
-}
+/* ── TIMER ── */
+function fmtTime(secs){ return `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`; }
 
-function tickTimer(n) {
-  const s = mockState[n];
-  if (s.submitted) return;
+function tickTimer(n){
+  const s=mockState[n];
+  if(s.submitted) return;
   s.secondsLeft--;
-  const t = timerEl(n);
-  const m = Math.floor(s.secondsLeft / 60);
-  const sec = s.secondsLeft % 60;
-  t.textContent = `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-  t.classList.toggle("warn",   s.secondsLeft <= 600 && s.secondsLeft > 300);
-  t.classList.toggle("danger", s.secondsLeft <= 300);
-  if (s.secondsLeft <= 0) submitMock(n);
+  timerEl(n).textContent=fmtTime(s.secondsLeft);
+  timerEl(n).classList.toggle('warn',  s.secondsLeft<=600&&s.secondsLeft>300);
+  timerEl(n).classList.toggle('danger',s.secondsLeft<=300);
+  persistMock(n);
+  if(s.secondsLeft<=0) submitMock(n);
 }
 
-function renderMockQuestions(n) {
-  const root = questionsEl(n);
-  const qs = questionsFor(n);
-  root.innerHTML = qs.map((q, qi) => `
+/* ── START ── */
+function startMock(n){
+  const s=mockState[n];
+  if(s.started) return;
+  s.started=true;
+  introEl(n).style.display='none';
+  bodyEl(n).style.display='block';
+  renderMockQuestions(n);
+  bodyEl(n).scrollIntoView({behavior:'smooth',block:'start'});
+  timerEl(n).textContent=fmtTime(s.secondsLeft);
+  s.timer=setInterval(()=>tickTimer(n),1000);
+  persistMock(n);
+}
+
+/* ── RENDER QUESTIONS ── */
+function renderMockQuestions(n){
+  const qs=questionsFor(n);
+  qEl(n).innerHTML=qs.map((q,qi)=>`
     <div class="question" data-mock="${n}" data-q="${qi}">
-      <div class="question-num">Question ${qi + 1} of ${qs.length}</div>
-      <div class="question-text">${q.text}</div>
+      <div class="question-num">Question ${qi+1} of ${qs.length}</div>
+      <div class="question-text">${esc(q.text)}</div>
       <div class="choices">
-        ${q.choices.map((c, ci) => `
-          <button class="choice" data-ci="${ci}" onclick="pickMock(${n}, ${qi}, ${ci})">
-            <span class="choice-letter">${String.fromCharCode(65 + ci)}</span>
-            <span>${c}</span>
-          </button>
-        `).join("")}
+        ${q.choices.map((c,ci)=>`
+          <button class="choice" data-ci="${ci}" onclick="pickMock(${n},${qi},${ci})">
+            <span class="choice-letter">${String.fromCharCode(65+ci)}</span>
+            <span>${esc(c)}</span>
+          </button>`).join('')}
       </div>
-    </div>
-  `).join("");
+    </div>`).join('');
 }
 
-function pickMock(n, qi, ci) {
-  const s = mockState[n];
-  if (s.submitted) return;
-  s.answers[qi] = ci;
-  const block = document.querySelector(`[data-mock="${n}"][data-q="${qi}"]`);
-  block.querySelectorAll(".choice").forEach((btn, i) => {
-    btn.classList.toggle("selected", i === ci);
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── RESTORE ANSWERS on page reload ── */
+function restoreAnswers(n){
+  const s=mockState[n];
+  const qs=questionsFor(n);
+  Object.entries(s.answers).forEach(([qi,ci])=>{
+    const block=document.querySelector(`[data-mock="${n}"][data-q="${qi}"]`);
+    if(block) block.querySelectorAll('.choice').forEach((btn,i)=>btn.classList.toggle('selected',i===+ci));
   });
+  if(s.submitted){
+    /* re-apply submission state visually without re-running logic */
+    qs.forEach((q,qi)=>{
+      const block=document.querySelector(`[data-mock="${n}"][data-q="${qi}"]`);
+      if(!block) return;
+      const picked=s.answers[qi];
+      block.querySelectorAll('.choice').forEach((btn,i)=>{
+        btn.disabled=true;
+        btn.classList.remove('selected');
+        if(i===q.correct) btn.classList.add('reveal-correct');
+        if(picked!==undefined&&+picked===i&&+picked!==q.correct) btn.classList.add('selected','wrong');
+      });
+      if(!block.querySelector('.explanation')){
+        const expl=document.createElement('div');
+        expl.className='explanation show '+(+picked===q.correct?'correct':'wrong');
+        expl.innerHTML=`<div class="explanation-title">${+picked===q.correct?'Correct':(picked===undefined?'Skipped':'Incorrect')}</div>
+          <details class="show-explanation"><summary>Show explanation</summary><div>${esc(q.explanation||'')}</div></details>`;
+        block.appendChild(expl);
+      }
+    });
+    renderMockScore(n);
+    const submitBtn=document.getElementById(`mock${n}SubmitBtn`);
+    if(submitBtn) submitBtn.disabled=true;
+  }
 }
 
-function submitMock(n) {
-  const s = mockState[n];
-  if (s.submitted) return;
-  s.submitted = true;
+/* ── PICK ANSWER ── */
+function pickMock(n,qi,ci){
+  const s=mockState[n];
+  if(s.submitted) return;
+  s.answers[qi]=ci;
+  persistMock(n);
+  const block=document.querySelector(`[data-mock="${n}"][data-q="${qi}"]`);
+  block.querySelectorAll('.choice').forEach((btn,i)=>btn.classList.toggle('selected',i===ci));
+}
+
+/* ── SUBMIT ── */
+function submitMock(n){
+  const s=mockState[n];
+  if(s.submitted) return;
+  s.submitted=true;
   clearInterval(s.timer);
+  const qs=questionsFor(n);
+  let correct=0;
+  qs.forEach((q,qi)=>{ if(+s.answers[qi]===q.correct) correct++; });
+  s.correct=correct;
+  persistMock(n);
 
-  const qs = questionsFor(n);
-  let correct = 0;
-  qs.forEach((q, qi) => { if (s.answers[qi] === q.correct) correct++; });
-  const pct = correct / qs.length;
-  const passed = pct >= MOCK_PASSMARK;
-
-  // Reveal correctness on every question
-  qs.forEach((q, qi) => {
-    const block = document.querySelector(`[data-mock="${n}"][data-q="${qi}"]`);
-    const picked = s.answers[qi];
-    block.querySelectorAll(".choice").forEach((btn, i) => {
-      btn.disabled = true;
-      btn.classList.remove("selected");
-      if (i === q.correct) btn.classList.add("reveal-correct");
-      if (picked === i && picked !== q.correct) btn.classList.add("selected", "wrong");
+  /* reveal correctness */
+  qs.forEach((q,qi)=>{
+    const block=document.querySelector(`[data-mock="${n}"][data-q="${qi}"]`);
+    const picked=s.answers[qi];
+    block.querySelectorAll('.choice').forEach((btn,i)=>{
+      btn.disabled=true;btn.classList.remove('selected');
+      if(i===q.correct) btn.classList.add('reveal-correct');
+      if(picked!==undefined&&+picked===i&&+picked!==q.correct) btn.classList.add('selected','wrong');
     });
-    const expl = document.createElement("div");
-    expl.className = "explanation show " + (picked === q.correct ? "correct" : "wrong");
-    expl.innerHTML = `
-      <div class="explanation-title">${picked === q.correct ? "Correct" : (picked === undefined ? "Skipped" : "Incorrect")}</div>
-      <div>${q.explanation || ""}</div>
-    `;
+    const expl=document.createElement('div');
+    expl.className='explanation show '+(+picked===q.correct?'correct':'wrong');
+    expl.innerHTML=`<div class="explanation-title">${+picked===q.correct?'Correct':(picked===undefined?'Skipped':'Incorrect')}</div>
+      <details class="show-explanation"><summary>Show explanation</summary><div>${esc(q.explanation||'')}</div></details>`;
     block.appendChild(expl);
   });
 
-  const r = resultsEl(n);
-  r.classList.add("show");
-  r.innerHTML = `
-    <div class="score-display">
-      <div class="score-num">${Math.round(pct * 1000)}</div>
-      <div class="score-label">${correct} / ${qs.length} correct (${Math.round(pct * 100)}%)</div>
-      <div class="score-verdict ${passed ? "pass" : "fail"}">${passed ? "PASS" : "Below pass mark"}</div>
-    </div>
-    <p style="text-align:center; color:var(--text-secondary)">
-      Time used: ${Math.floor((MOCK_MINUTES * 60 - s.secondsLeft) / 60)} min ${(MOCK_MINUTES * 60 - s.secondsLeft) % 60} sec.
-      Pass mark: ${Math.round(MOCK_PASSMARK * 100)}%.
-    </p>
-  `;
-  r.scrollIntoView({ behavior: "smooth", block: "start" });
+  const submitBtn=document.getElementById(`mock${n}SubmitBtn`);
+  if(submitBtn) submitBtn.disabled=true;
+  renderMockScore(n);
+  resultsEl(n).scrollIntoView({behavior:'smooth',block:'start'});
+  checkBothDone();
 }
+
+function renderMockScore(n){
+  const s=mockState[n];
+  const qs=questionsFor(n);
+  const pct=s.correct/qs.length;
+  const passed=pct>=MOCK_PASSMARK;
+  const timeUsed=MOCK_MINUTES*60-s.secondsLeft;
+  const r=resultsEl(n);
+  r.classList.add('show');
+  r.innerHTML=`
+    <div class="score-display">
+      <div class="score-num">${Math.round(pct*1000)}</div>
+      <div class="score-label">${s.correct} / ${qs.length} correct (${Math.round(pct*100)}%)</div>
+      <div class="score-verdict ${passed?'pass':'fail'}">${passed?'✓ PASS':'✗ Below pass mark'}</div>
+    </div>
+    <p style="text-align:center;color:var(--mu);font-size:0.85rem">
+      Time used: ${Math.floor(timeUsed/60)}m ${timeUsed%60}s · Pass mark: ${Math.round(MOCK_PASSMARK*100)}%
+    </p>`;
+}
+
+/* ── COMPLETION CANVAS (both mocks done) ── */
+function checkBothDone(){
+  if(!mockState[1].submitted||!mockState[2].submitted) return;
+  const already=sessionStorage.getItem('hmp_mock_canvas_shown');
+  if(already) return;
+  sessionStorage.setItem('hmp_mock_canvas_shown','1');
+  showCompletionCanvas();
+}
+
+function showCompletionCanvas(){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(10,15,30,0.93);z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#fff;text-align:center;padding:24px';
+  const m1=mockState[1],m2=mockState[2];
+  const p1=m1.correct/MOCK1.length>=MOCK_PASSMARK,p2=m2.correct/MOCK2.length>=MOCK_PASSMARK;
+  ov.innerHTML=`
+    <div style="font-size:3rem">🎉</div>
+    <h2 style="font-size:1.8rem;margin:0">Mock Tests Complete!</h2>
+    <div style="font-size:1rem;line-height:2">
+      Mock 1: <strong>${m1.correct}/${MOCK1.length}</strong> — <span style="color:${p1?'#4ade80':'#fbbf24'}">${p1?'PASS':'Below pass mark'}</span><br>
+      Mock 2: <strong>${m2.correct}/${MOCK2.length}</strong> — <span style="color:${p2?'#4ade80':'#fbbf24'}">${p2?'PASS':'Below pass mark'}</span>
+    </div>
+    <p style="color:#a0b0c8;max-width:400px;margin:0">Good luck on your exam! You've put in the work — go get it. 💪</p>
+    <button onclick="this.closest('div').remove()" style="margin-top:8px;padding:10px 28px;border-radius:6px;border:none;background:#5c6ef8;color:#fff;font-size:1rem;cursor:pointer;font-family:inherit">View Results &amp; Retrospect</button>`;
+  document.body.appendChild(ov);
+  triggerConfettiCanvas();
+}
+
+function triggerConfettiCanvas(){
+  const c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:9999';
+  document.body.appendChild(c);c.width=window.innerWidth;c.height=window.innerHeight;
+  const ctx=c.getContext('2d');
+  const colors=['#ffb84d','#4ade80','#60a5fa','#f87171','#a78bfa','#fbbf24'];
+  const pieces=Array.from({length:180},()=>({x:Math.random()*c.width,y:-20-Math.random()*100,w:8+Math.random()*8,h:4+Math.random()*5,color:colors[Math.floor(Math.random()*colors.length)],vx:(Math.random()-.5)*3,vy:2+Math.random()*4,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.12,op:1}));
+  const t0=Date.now(),DUR=4000;
+  (function go(){const el=Date.now()-t0;ctx.clearRect(0,0,c.width,c.height);pieces.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.rs;if(el>DUR*.65)p.op=Math.max(0,1-(el-DUR*.65)/(DUR*.35));ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x+p.w/2,p.y+p.h/2);ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});if(el<DUR)requestAnimationFrame(go);else c.remove();})();
+}
+
+/* ── PAGE LOAD: RESTORE STATE ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  [1,2].forEach(n=>{
+    const hadSaved=loadMockPersisted(n);
+    const s=mockState[n];
+    if(!hadSaved||!s.started) return;
+    introEl(n).style.display='none';
+    bodyEl(n).style.display='block';
+    renderMockQuestions(n);
+    timerEl(n).textContent=fmtTime(s.secondsLeft);
+    restoreAnswers(n);
+    if(!s.submitted){
+      s.timer=setInterval(()=>tickTimer(n),1000);
+    }
+  });
+  /* Keyboard dismiss for completion canvas */
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){const ov=document.querySelector('div[style*="z-index:9998"]');if(ov)ov.remove();}});
+});
 </script>
 </body>
 </html>

@@ -7,6 +7,28 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.3.0] — 2026-05-19
+
+v1.3 is a targeted bug-fix release addressing nine visual/rendering regressions that shipped in v1.2. All fixes are confined to `assets/styles.css` and `assets/quizlib.js`. No changes to `SKILL.md` protocol, question schemas, or generation flow.
+
+### Fixed
+
+- **`styles.css` — Blueprint theme inactive on day pages** — `.app.blueprint {}` block was a no-op; day pages rendered in the old dark theme. Added a complete remapping of `--bg-*`/`--text-*`/`--accent` tokens to the Blueprint palette and a `body:has(.app.blueprint)` rule for the body background.
+- **`styles.css` — `.mode-btn` unstyled** — Normal / Challenge mode toggle rendered with browser defaults only. Redesigned as a segmented pill capsule: Normal uses indigo gradient, Challenge uses fire-orange gradient.
+- **`styles.css` — `.hint-btn`, `.hint-box`, `.hint-label` unstyled** — hint UI had zero CSS. Styled with an amber pill button, tinted reveal container, and an uppercase tier label.
+- **`styles.css` — `.choice.hint-greyed` rule missing** — `quizlib.js` injected this class to grey out a wrong choice, but no CSS rule backed it; the choice remained fully visible. Added `opacity: 0.25; pointer-events: none; filter: grayscale(0.5)`.
+- **`styles.css` — `.btn <a>` link colour leak** — the global `a { color: var(--accent) }` rule caused `.btn`-wrapped anchor tags (e.g. "Start Day 1") to show indigo text on an indigo button. Scoped the rule to `a:not(.btn):not(.btn-secondary)` and added `.blueprint .btn { color: #fff }`.
+- **`styles.css` — `.conf-btn`, `.conf-row`, `.conf-label` unstyled** — confidence rating row had no CSS. Applied traffic-light semantics: Guessed = coral, Sure = amber, Certain = emerald with glow rings.
+- **`quizlib.js` — `renderMatch()` partial-state re-render bug** — already-matched pairs were re-rendered as live, clickable buttons after each subsequent pair was attempted. Fixed by building `matchedTerms`/`matchedDefs` Sets from `qd.matched` before rendering and immediately locking matched buttons with the `correct-pair` + `disabled` classes.
+- **`styles.css` — match / order / fill-blank question types completely unstyled** — all interactive classes for the three non-MCQ question types had zero CSS. Full styling pass added: `.match-term-btn`, `.match-def-btn`, `.match-cols`, `.order-item`, `.drag-handle`, `.btn-check`, `.word-pill`, `.blank-slot`, `.btn-submit-blank`, `.show-explanation`, `.explanation-text`, `.ag`, `.shake`.
+- **`quizlib.js` — `inlineFmt()` did not handle Markdown links** — `[text](url)` syntax was not matched; all hyperlinks in Further Reading sections rendered as raw text. Added `.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" ...>$1</a>')` before bold/italic/code replacements.
+
+### Not changed
+- `SKILL.md` — protocol, tunable variables, question schemas, and generation flow are unchanged from v1.2.
+- `assets/nav.js`, `assets/index-template.html`, `assets/day-template.html`, `assets/mock-template.html` — unchanged from v1.2.
+
+---
+
 ## [1.2.0] — 2026-05-17
 
 ### Added
@@ -102,6 +124,7 @@ _Nothing yet — contributions welcome._
 ---
 
 <!-- Links -->
+[1.3.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.3
 [1.2.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.2
 [1.1.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.1.0
 [1.0.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.0.0

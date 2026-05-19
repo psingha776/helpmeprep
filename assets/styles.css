@@ -373,14 +373,14 @@ li {
   margin-bottom: 6px;
 }
 
-a {
+a:not(.btn):not(.btn-secondary) {
   color: var(--accent);
   text-decoration: none;
   border-bottom: 1px dashed transparent;
   transition: border-color var(--transition);
 }
 
-a:hover {
+a:not(.btn):not(.btn-secondary):hover {
   border-bottom-color: var(--accent);
 }
 
@@ -1143,3 +1143,380 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
   margin: 0;
   font-size: 0.875rem;
 }
+
+/* ====== v1.3 fixes ====== */
+
+/* ── Fix 1: Blueprint theme remapping ── */
+/* Remap dark-theme tokens → Blueprint palette when .app.blueprint is present */
+.app.blueprint {
+  --bg-primary:    #f6f9ff;
+  --bg-secondary:  #1e3058;
+  --bg-elevated:   #eef1ff;
+  --bg-card:       #ffffff;
+  --bg-hover:      rgba(92,110,248,0.06);
+  --border:        #cdd8ee;
+  --border-light:  #adbdd8;
+  --text-primary:  #0a0f1e;
+  --text-secondary:#2a3a52;
+  --text-muted:    #3d5272;
+  --accent:        #5c6ef8;
+  --accent-hover:  #4a5ce0;
+  --accent-soft:   rgba(92,110,248,0.08);
+  --success:       #16a34a;
+  --success-soft:  rgba(22,163,74,0.10);
+  --error:         #dc2626;
+  --error-soft:    rgba(220,38,38,0.10);
+  --info:          #2563eb;
+  --info-soft:     rgba(37,99,235,0.10);
+  --warning:       #d97706;
+  --font-body:     'Outfit', system-ui, sans-serif;
+  --font-mono:     'JetBrains Mono', 'Cascadia Code', ui-monospace, monospace;
+  --sidebar-width: 212px;
+  /* Blueprint geometry */
+  --r:   6px;
+  --cr:  10px;
+}
+
+/* Body background is outside .app, so needs a separate rule */
+body:has(.app.blueprint) {
+  background: #f6f9ff;
+  color: #0a0f1e;
+}
+
+/* Blueprint sidebar stays dark navy */
+.app.blueprint .sidebar {
+  background: #1e3058;
+  border-right: 1px solid #2a4070;
+  color: #d8e4f8;
+}
+.app.blueprint .sidebar-logo,
+.app.blueprint .nav-day-header,
+.app.blueprint .nav-sublist a { color: #d8e4f8; }
+.app.blueprint .nav-day-header:hover { background: rgba(92,110,248,0.12); }
+.app.blueprint .nav-day-header.active {
+  background: rgba(92,110,248,0.18);
+  border-left: 2px solid #5c6ef8;
+  padding-left: 12px;
+  color: #d8e4f8;
+}
+.app.blueprint .day-num { background: rgba(92,110,248,0.15); color: #7a9ec8; }
+.app.blueprint .nav-day-header.active .day-num { background: #5c6ef8; color: #fff; }
+.app.blueprint .sidebar-footer { color: #7a9ec8; border-top-color: #2a4070; }
+
+/* Blueprint canvas grid overlay */
+.app.blueprint .main { position: relative; }
+.app.blueprint .main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(92,110,248,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92,110,248,0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.app.blueprint .main-inner { position: relative; z-index: 1; }
+
+/* Blueprint .btn — Fix 5: white text on indigo button */
+.app.blueprint .btn { color: #ffffff; background: #5c6ef8; }
+.app.blueprint .btn:hover { background: #4a5ce0; }
+
+/* ── Fix 2: Mode toggle (Normal / Challenge) ── */
+.mode-toggle {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  margin-bottom: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+  width: fit-content;
+}
+.mode-btn {
+  padding: 5px 18px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.mode-btn[data-mode="normal"].active {
+  background: linear-gradient(135deg, #5c6ef8, #7c8dfa);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(92,110,248,0.25), 0 2px 8px rgba(92,110,248,0.30);
+}
+.mode-btn[data-mode="challenge"].active {
+  background: linear-gradient(135deg, #ff6b35, #ff3d57);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(255,61,87,0.25), 0 2px 8px rgba(255,61,87,0.30);
+}
+
+/* ── Fix 3: Hint button & reveal box ── */
+.hint-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px dashed #d97706;
+  color: #d97706;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s ease;
+}
+.hint-btn:hover:not(:disabled) {
+  background: rgba(217,119,6,0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(217,119,6,0.20);
+}
+.hint-btn:disabled { opacity: 0.38; cursor: default; }
+.app.blueprint .hint-btn { border-color: #d97706; color: #d97706; }
+
+.hint-box {
+  background: rgba(251,191,36,0.08);
+  border-left: 3px solid #fbbf24;
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+  margin: 6px 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  animation: slideUp 0.2s ease;
+}
+.hint-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #d97706;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+  display: block;
+}
+
+/* ── Fix 4: Hint-greyed (one wrong choice dimmed by Hint 1) ── */
+.choice.hint-greyed {
+  opacity: 0.25;
+  pointer-events: none;
+  filter: grayscale(0.5);
+}
+
+/* ── Fix 6: Confidence buttons — traffic-light semantics ── */
+.conf-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.conf-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.conf-btn {
+  padding: 3px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.conf-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* Guessed → coral (needs review) */
+.conf-btn[data-conf="guessed"].selected {
+  background: #fee2e2; color: #b91c1c;
+  border-color: #fca5a5;
+  box-shadow: 0 0 0 2px rgba(220,38,38,0.15);
+}
+/* Sure → amber (neutral) */
+.conf-btn[data-conf="sure"].selected {
+  background: #fef3c7; color: #92400e;
+  border-color: #fcd34d;
+  box-shadow: 0 0 0 2px rgba(217,119,6,0.15);
+}
+/* Certain → emerald (solid knowledge) */
+.conf-btn[data-conf="certain"].selected {
+  background: #dcfce7; color: #15803d;
+  border-color: #86efac;
+  box-shadow: 0 0 0 2px rgba(22,163,74,0.15);
+}
+/* Blueprint overrides */
+.app.blueprint .conf-btn[data-conf="guessed"].selected { background: rgba(220,38,38,0.08); }
+.app.blueprint .conf-btn[data-conf="sure"].selected    { background: rgba(217,119,6,0.08);  }
+.app.blueprint .conf-btn[data-conf="certain"].selected { background: rgba(22,163,74,0.08);  }
+
+/* ── Fix 8: Match / Order / Fill-blank interactive elements ── */
+
+/* Match question */
+.match-cols { display: flex; gap: 16px; margin: 12px 0; }
+.match-col  { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.match-term-btn,
+.match-def-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1.5px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.match-term-btn:hover:not(:disabled),
+.match-def-btn:hover:not(:disabled)  { border-color: var(--accent); background: var(--accent-soft); color: var(--text-primary); }
+.match-term-btn.selected,
+.match-def-btn.selected              { border-color: var(--accent); background: var(--accent-soft); color: var(--text-primary); box-shadow: 0 0 0 2px rgba(92,110,248,0.25); }
+.match-term-btn.correct-pair,
+.match-def-btn.correct-pair          { border-color: var(--success); background: var(--success-soft); color: var(--text-primary); cursor: default; }
+.match-term-btn:disabled,
+.match-def-btn:disabled              { cursor: default; }
+.match-term-btn.shake,
+.match-def-btn.shake                 { animation: matchShake 0.4s ease; border-color: var(--error); background: var(--error-soft); }
+@keyframes matchShake {
+  0%,100% { transform: translateX(0); border-color: var(--error); }
+  20%,60% { transform: translateX(-4px); }
+  40%,80% { transform: translateX(4px); }
+}
+
+.match-row  { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 0.9rem; }
+.match-term { color: var(--text-primary); font-weight: 500; flex: 1; }
+.match-arrow{ color: var(--text-muted); flex-shrink: 0; }
+.match-def  { color: var(--text-secondary); flex: 1.5; }
+
+/* Order question */
+.order-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.order-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1.5px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.order-item:hover:not(.correct) { border-color: var(--border-light); background: var(--bg-hover); transform: translateX(2px); }
+.order-item.dragging { opacity: 0.5; box-shadow: var(--shadow-md, 0 6px 20px rgba(0,0,0,0.25)); }
+.order-item.drag-over { border-color: var(--accent); background: var(--accent-soft); }
+.order-item.correct { border-color: var(--success); background: var(--success-soft); color: var(--text-primary); cursor: default; }
+.order-item.wrong   { border-color: var(--error);   background: var(--error-soft);   }
+.drag-handle { color: var(--text-muted); flex-shrink: 0; font-size: 0.9rem; margin-top: 1px; cursor: grab; }
+
+/* Check Order / Submit / Show-explanation buttons */
+.btn-check,
+.btn-submit-blank {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 18px;
+  border-radius: 20px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-check:hover,
+.btn-submit-blank:hover { background: var(--accent-hover, #4a5ce0); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(92,110,248,0.30); }
+
+/* Fill-blank */
+.word-bank  { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.word-pill  {
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.word-pill:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.word-pill.used { opacity: 0.30; cursor: default; }
+.word-pill:disabled { cursor: default; }
+
+.blank-slot {
+  display: inline-block;
+  min-width: 90px;
+  padding: 2px 10px;
+  border-bottom: 2px solid var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  vertical-align: middle;
+}
+.blank-slot.filled  { background: var(--accent-soft); }
+.blank-slot.correct { border-color: var(--success); background: var(--success-soft); color: var(--success); cursor: default; }
+.blank-slot.wrong   { border-color: var(--error);   background: var(--error-soft);   color: var(--error);   cursor: default; }
+
+/* Show-explanation toggle (match/order/fillblank) */
+.show-explanation { margin-top: 10px; }
+.show-explanation summary {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.show-explanation summary::-webkit-details-marker { display: none; }
+.show-explanation summary::before { content: "▶"; font-size: 0.65rem; transition: transform 0.2s; display: inline-block; }
+.show-explanation[open] summary::before { transform: rotate(90deg); }
+.show-explanation summary:hover { color: var(--text-primary); }
+.explanation-text { font-size: 0.88rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.55; }
+
+/* Ask Google button (Fix 8) */
+.ag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.ag:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Shake keyframe (already defined above as matchShake — alias for backwards compat) */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-4px); }
+  40%,80% { transform: translateX(4px); }
+}
+.shake { animation: shake 0.4s ease; }

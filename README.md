@@ -1,8 +1,8 @@
-# 📚 helpmeprep — Interactive Study Hub Builder `v1.2`
+# 📚 helpmeprep — Interactive Study Hub Builder `v1.3`
 
 > **Build a Brilliant-style, Blueprint-themed multi-day study hub from any exam notes, syllabus, or job description — in one prompt.**
 
-[![Version](https://img.shields.io/badge/version-1.2.0-5c6ef8?style=flat-square)](https://github.com/psingha776/helpmeprep/releases/tag/v1.2)
+[![Version](https://img.shields.io/badge/version-1.3.0-5c6ef8?style=flat-square)](https://github.com/psingha776/helpmeprep/releases/tag/v1.3)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Skill](https://img.shields.io/badge/type-Claude%20Skill-blueviolet?style=flat-square)](https://docs.anthropic.com)
 
@@ -14,7 +14,7 @@
 
 ---
 
-## ✨ Features (v1.2)
+## ✨ Features (v1.3)
 
 ### 🎓 Study Days
 | Feature | Details |
@@ -81,8 +81,10 @@ outputs/{topic-slug}/
 ├── quizlib.js          # Quiz engine — all question types, XP, hints, review pool
 ├── nav.js              # Sidebar navigation + XP/streak display
 ├── index.html          # Hub landing page with day tiles + domain heatmap
-├── day1.html           # Study day 1
+├── day1.html           # Study day 1 (shell + study content)
+├── day1-quiz.js        # Study day 1 questions (sidecar)
 ├── day2.html           # Study day 2
+├── day2-quiz.js        # Study day 2 questions (sidecar)
 │   ...
 └── day{n}.html         # Mock test day (2 × timed mocks)
 ```
@@ -156,6 +158,24 @@ outputs/{topic-slug}/
 
 ---
 
+## 🐛 What's Fixed in v1.3
+
+v1.3 is a targeted bug-fix release. All nine fixes are already baked into the `assets/` files — no user-facing protocol changes.
+
+| # | File | Issue Fixed |
+|---|---|---|
+| 1 | `styles.css` | `.app.blueprint` class was a no-op — day pages rendered in the old dark theme instead of Blueprint |
+| 2 | `styles.css` | `.mode-btn` (Normal / Challenge toggle) had no CSS — browser defaults only; now a segmented pill capsule |
+| 3 | `styles.css` | `.hint-btn`, `.hint-box`, `.hint-label` had no CSS — hint UI was completely unstyled |
+| 4 | `styles.css` | `.choice.hint-greyed` class injected by `quizlib.js` had no CSS rule — greyed choice was invisible |
+| 5 | `styles.css` | `.btn` `<a>` tags (e.g. "Start Day 1") inherited `color: var(--accent)` — indigo text on indigo button |
+| 6 | `styles.css` | `.conf-btn`, `.conf-row`, `.conf-label` had no CSS — confidence rating row was completely unstyled |
+| 7 | `quizlib.js` | `renderMatch()` re-rendered already-matched pairs as live buttons — partial-match re-render bug |
+| 8 | `styles.css` | All match / order / fill-blank interactive classes had zero CSS — these question types were completely unstyled |
+| 9 | `quizlib.js` | `inlineFmt()` lacked `[text](url)` regex — all hyperlinks in Further Reading rendered as raw text |
+
+---
+
 ## 📦 What's New in v1.2
 
 | # | Feature | Description |
@@ -200,4 +220,4 @@ MIT © [Pranoy Singha](https://linkedin.com/in/psingha776)
 
 ---
 
-*Built with Claude Sonnet 4.6 · Skill version 1.2.0 · Blueprint Design System · Model specs verified May 2026*
+*Built with Claude Sonnet 4.6 · Skill version 1.3.0 · Blueprint Design System · Model specs verified May 2026*
