@@ -1520,3 +1520,151 @@ body:has(.app.blueprint) {
   40%,80% { transform: translateX(4px); }
 }
 .shake { animation: shake 0.4s ease; }
+
+/* ============================================================
+   v1.4 ADDITIONS — Dark mode, theme toggle, kbd shortcuts UI,
+   sticky-note coachmark, mark-for-review, heatmap, calibration,
+   notes dashboard, quick-quiz modal, per-question timer
+   ============================================================ */
+
+/* ── DARK MODE ── */
+html.dark .blueprint {
+  --canvas: #0b1226;
+  --ink: #e8eef8;
+  --bo: #c4d0e3;
+  --mu: #8aa0bf;
+  --card: #14213d;
+  --cb: #243553;
+  --bdg: #1a2a4a;
+  --sb: #0a1124;
+  --sb-line: #1c2849;
+  --sb-tx: #e0e8f4;
+  --sb-mu: #708cb0;
+}
+html.dark body { background: #0b1226; color: #e8eef8; }
+html.dark .grid-ov { background-image: linear-gradient(rgba(92,110,248,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(92,110,248,0.07) 1px,transparent 1px); }
+html.dark .callout.info { background: rgba(96,165,250,0.10); }
+html.dark code { background: rgba(92,110,248,0.18); }
+
+/* ── THEME TOGGLE BUTTON ── */
+.theme-toggle {
+  position: fixed; top: 14px; right: 14px; z-index: 200;
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid rgba(128,128,128,0.3); background: rgba(255,255,255,0.6);
+  font-size: 18px; cursor: pointer; opacity: 0.25; transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+}
+.theme-toggle:hover { opacity: 1; }
+html.dark .theme-toggle { background: rgba(20,33,61,0.6); color: #e8eef8; border-color: rgba(255,255,255,0.15); }
+
+/* ── KEYBOARD HELP BUTTON & CHEATSHEET ── */
+.kbd-help-btn {
+  position: fixed; top: 14px; right: 62px; z-index: 200;
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid rgba(128,128,128,0.3); background: rgba(255,255,255,0.6);
+  font-size: 17px; cursor: pointer; opacity: 0.25; transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+}
+.kbd-help-btn:hover { opacity: 1; }
+html.dark .kbd-help-btn { background: rgba(20,33,61,0.6); color: #e8eef8; border-color: rgba(255,255,255,0.15); }
+
+kbd { display: inline-block; padding: 1px 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.78em; background: rgba(128,128,128,0.15); border: 1px solid rgba(128,128,128,0.3); border-radius: 4px; }
+
+.kbd-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: rgba(10,15,30,0.94); color: #fff; padding: 10px 16px;
+  border-radius: 8px; display: flex; gap: 12px; align-items: center;
+  font-size: 0.85rem; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  transition: opacity 0.6s; max-width: 92vw;
+}
+.kbd-toast.fade { opacity: 0; }
+.kbd-toast button { background: transparent; border: 0; color: #fff; cursor: pointer; font-size: 1.1rem; padding: 0 4px; }
+.kbd-toast kbd { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.3); color: #fff; }
+
+.kbd-cheat-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9997; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.kbd-cheat { background: var(--card,#fff); color: var(--ink,#0a0f1e); border-radius: 12px; padding: 24px; max-width: 400px; width: 100%; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+.kbd-cheat h3 { margin: 0 0 12px; }
+.kbd-cheat dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0 0 14px; font-size: 0.88rem; }
+.kbd-cheat dt { white-space: nowrap; }
+.kbd-cheat button { margin-top: 8px; padding: 6px 16px; border-radius: 6px; border: 1px solid var(--cb,#cdd8ee); background: var(--accent,#5c6ef8); color: #fff; cursor: pointer; }
+
+/* ── STICKY NOTE TRIGGER (replaces hover-only 📌) ── */
+.sticky-trigger { display: inline-block; opacity: 0.35; font-size: 11px; font-weight: 500; cursor: pointer; margin-left: 8px; padding: 2px 8px; border: 1px dashed currentColor; border-radius: 4px; vertical-align: middle; transition: opacity 0.2s, background 0.2s; user-select: none; }
+.sticky-trigger:hover { opacity: 1; background: rgba(92,110,248,0.08); }
+.sticky-note { background: rgba(251,191,36,0.10); border-left: 3px solid #fbbf24; padding: 8px 12px; margin: 4px 0 14px; border-radius: 0 6px 6px 0; font-size: 0.88rem; min-height: 36px; outline: none; white-space: pre-wrap; }
+.sticky-note:empty::before { content: "Type your note…"; color: var(--mu,#3d5272); pointer-events: none; }
+
+.notes-badge { display: inline-block; background: #fbbf24; color: #1e293b; border-radius: 20px; padding: 2px 10px; font-size: 0.72rem; font-weight: 600; margin-left: 10px; vertical-align: middle; }
+.notes-badge.empty { background: transparent; color: var(--mu,#3d5272); border: 1px dashed currentColor; }
+
+/* ── COACHMARK ── */
+.coachmark { display: flex; align-items: flex-start; gap: 10px; background: rgba(92,110,248,0.10); border: 1px solid rgba(92,110,248,0.35); border-radius: 8px; padding: 12px 14px; margin: 8px 0 14px; font-size: 0.88rem; position: relative; animation: cmFade 0.5s ease; }
+.coachmark .cm-arrow { font-size: 1.4rem; line-height: 1; color: var(--accent,#5c6ef8); }
+.coachmark .cm-body { flex: 1; }
+.coachmark .cm-x { background: var(--accent,#5c6ef8); color: #fff; border: 0; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 0.82rem; align-self: center; }
+@keyframes cmFade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ── PER-QUESTION TIMER ── */
+.q-time { font-weight: 500; color: var(--mu,#3d5272); font-size: 0.78rem; margin-left: 8px; font-family: 'JetBrains Mono', monospace; }
+
+/* ── MARK FOR REVIEW (mock) ── */
+.flag-btn { background: transparent; border: 0; cursor: pointer; opacity: 0.4; font-size: 1rem; margin-left: 8px; padding: 0 4px; transition: opacity 0.2s, transform 0.15s; }
+.flag-btn:hover { opacity: 1; }
+.flag-btn.on { opacity: 1; filter: drop-shadow(0 0 4px rgba(251,191,36,0.6)); }
+.question.flagged { border-left: 3px solid #fbbf24; padding-left: 10px; }
+.flag-panel { background: rgba(251,191,36,0.10); border-left: 3px solid #fbbf24; padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0; font-size: 0.85rem; }
+.flag-panel-title { font-weight: 600; margin-bottom: 4px; }
+.flag-list a { color: var(--accent,#5c6ef8); text-decoration: none; margin-right: 4px; }
+.flag-list a:hover { text-decoration: underline; }
+.dom-breakdown { margin-top: 16px; }
+.dom-breakdown summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+.dom-breakdown table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.dom-breakdown th, .dom-breakdown td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--cb,#cdd8ee); }
+.dom-breakdown th { background: rgba(92,110,248,0.06); }
+
+/* ── HEATMAP ── */
+.heatmap-section, .calibration-section, .notes-dash { margin: 32px 0; }
+.hm-wrap { overflow-x: auto; }
+.hm-table { border-collapse: separate; border-spacing: 4px; font-size: 0.78rem; }
+.hm-table th, .hm-table td { padding: 6px 10px; }
+.hm-domain-h, .hm-col-h { font-weight: 600; color: var(--mu,#3d5272); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.7rem; }
+.hm-domain { font-weight: 500; color: var(--ink,#0a0f1e); white-space: nowrap; }
+.hm-cell { text-align: center; min-width: 38px; border-radius: 6px; font-weight: 600; }
+.hm-cell.off { background: rgba(92,110,248,0.06); color: var(--mu,#3d5272); }
+.hm-cell.lo  { background: rgba(92,110,248,0.25); color: #1a2a42; }
+.hm-cell.mid { background: rgba(92,110,248,0.50); color: #fff; }
+.hm-cell.on  { background: rgba(92,110,248,0.78); color: #fff; }
+
+/* ── CALIBRATION ── */
+.cal-row { display: grid; grid-template-columns: 90px 1fr 140px; align-items: center; gap: 12px; padding: 6px 0; }
+.cal-label { font-weight: 500; color: var(--ink,#0a0f1e); }
+.cal-bar { background: var(--bdg,#eef1ff); border-radius: 6px; height: 14px; overflow: hidden; }
+.cal-fill { background: var(--accent,#5c6ef8); height: 100%; transition: width 0.4s; }
+.cal-stat { font-size: 0.85rem; color: var(--ink,#0a0f1e); }
+.cal-warn { color: #f59e0b; margin-left: 4px; }
+
+/* ── NOTES DASHBOARD ── */
+.notes-day { margin-bottom: 18px; }
+.notes-day-h { font-weight: 600; color: var(--mu,#3d5272); text-transform: uppercase; letter-spacing: 0.6px; font-size: 0.78rem; margin-bottom: 6px; border-bottom: 1px solid var(--cb,#cdd8ee); padding-bottom: 4px; }
+.note-item { padding: 8px 0; border-bottom: 1px dashed var(--cb,#cdd8ee); }
+.note-item:last-child { border-bottom: 0; }
+.note-anchor { font-size: 0.78rem; color: var(--mu,#3d5272); margin-bottom: 2px; }
+.note-anchor a { color: var(--accent,#5c6ef8); text-decoration: none; }
+.note-anchor a:hover { text-decoration: underline; }
+.note-body { font-size: 0.9rem; color: var(--ink,#0a0f1e); white-space: pre-wrap; padding-left: 12px; border-left: 2px solid rgba(251,191,36,0.5); }
+
+/* ── NAV NOTE BADGE ── */
+.nav-note-count { background: rgba(251,191,36,0.18); color: #d97706; border-radius: 10px; padding: 1px 7px; font-size: 0.68rem; font-weight: 600; margin-left: auto; margin-right: 8px; }
+html.dark .nav-note-count { background: rgba(251,191,36,0.22); color: #fbbf24; }
+
+/* ── QUICK QUIZ MODAL ── */
+.qq-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9996; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.qq-inner { background: var(--card,#fff); color: var(--ink,#0a0f1e); border-radius: 14px; padding: 24px; max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+.qq-close { position: absolute; top: 10px; right: 14px; background: transparent; border: 0; font-size: 1.4rem; cursor: pointer; color: var(--mu,#3d5272); }
+.qq-close:hover { color: var(--ink,#0a0f1e); }
+
+/* ── BTN SECONDARY ── */
+.btn-secondary { background: transparent; border: 1px solid var(--cb,#cdd8ee); color: var(--ink,#0a0f1e); }
+.btn-secondary:hover { border-color: var(--accent,#5c6ef8); color: var(--accent,#5c6ef8); }

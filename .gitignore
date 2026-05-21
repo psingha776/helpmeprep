@@ -15,3 +15,18 @@ generated/
 
 # Node (if anyone adds tooling)
 node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Packaged skill releases (the .skill file is intentionally committed; ignore build artifacts)
+*.skill.bak
+dist/
+build/

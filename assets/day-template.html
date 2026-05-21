@@ -10,13 +10,12 @@
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-day="{{DAY_NUM}}">
+<button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
+<button class="kbd-help-btn" onclick="showKbdCheatsheet()" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">⌨</button>
 <div class="app blueprint">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <a href="index.html" class="sidebar-logo">
-        <span class="logo-mark">{{LOGO_3CHAR}}</span>
-        <span>Study Hub</span>
-      </a>
+      <a href="index.html" class="sidebar-logo"><span class="logo-mark">{{LOGO_3CHAR}}</span><span>Study Hub</span></a>
       <button class="sidebar-toggle" aria-label="Close sidebar" onclick="toggleSidebar()">×</button>
     </div>
     <nav class="sidebar-nav" id="navRoot"></nav>
@@ -34,70 +33,33 @@
 
       <section class="page-hero">
         <div class="page-eyebrow">Day {{DAY_NUM}} · {{DAY_DOMAIN}}</div>
-        <h1 class="page-title">{{DAY_TITLE}} <span id="notesBadge" class="notes-badge" style="display:none"></span></h1>
+        <h1 class="page-title">{{DAY_TITLE}} <span id="notesBadge" class="notes-badge"></span></h1>
         <p class="page-meta">Roughly <strong>{{H}} hours</strong> of study + a 30-question quiz when you're ready.</p>
       </section>
 
-      <!-- ── STUDY CONTENT ── -->
       <section id="study">
-        <!--
-          Generate the STUDY_MD JavaScript constant below.
-          Use Markdown with Blueprint callout extensions:
-
-          ## Heading 2                    → <h2> with sticky note trigger
-          ### Heading 3                   → <h3> with sticky note trigger
-          > [!info] Title                 → info callout box
-          > content line                  → (continues callout; multiple > lines allowed)
-          > [!warn] / > [!success] / > [!error]  → other callout variants
-          EXAMPLE: text                   → example block
-          ```lang                         → fenced code block
-          code here
-          ```
-          | col | col |                   → table (with separator row)
-          | --- | --- |
-          [badge] [badge]                 → badge pill row
-          **bold** *italic* `code`        → inline formatting
-          - item / 1. item                → lists
-          Regular paragraph text          → <p>
-
-          Target ≈ WORDS_PER_HOUR × h words (code + tables excluded).
-          End with a ## Key Takeaways section listing 5–8 bullet points.
-          After the takeaways, add a ## Further Reading section:
-            - 3–6 links mixing official docs and YouTube
-            - Prefix web links with 📄, YouTube with ▶
-            - Only include links you are highly confident exist
-        -->
+        <!-- STUDY_MD constant populated below. See SKILL.md for Markdown syntax. -->
       </section>
 
       <script>
-      /* {{STUDY_MD_START}}
-         Replace the template string below with the full Markdown content.
-         Escape any backticks inside the content as \`.
-         {{STUDY_MD_END}} */
+      /* {{STUDY_MD_START}} */
       const STUDY_MD = `
 ## Study Content
 
 Replace this placeholder with the actual day content in Markdown format.
-Use headings, callouts, examples, code blocks, and tables as needed.
-
-> [!info] Getting Started
-> This is an example callout. Replace with real content.
 
 ## Key Takeaways
 
 - Takeaway 1
-- Takeaway 2
-- Takeaway 3
 
 ## Further Reading
 
 📄 [Official Documentation](https://docs.example.com) — docs.example.com
-▶ [Intro Video](https://www.youtube.com/results?search_query=topic) — YouTube
       `;
+      /* {{STUDY_MD_END}} */
       </script>
       <div id="studyRendered"></div>
 
-      <!-- ── QUIZ ── -->
       <section id="quiz">
         <div class="quiz-intro">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px">
@@ -107,20 +69,14 @@ Use headings, callouts, examples, code blocks, and tables as needed.
               <button class="quiz-reset-btn" onclick="clearReviewQueue()" title="Clear spaced-review queue">🗑 Clear Review</button>
             </div>
           </div>
-
-          <!-- Lives / Challenge mode toggle -->
           <div class="mode-toggle">
             <span style="font-size:0.82rem;color:var(--mu)">Mode:</span>
             <button class="mode-btn active" data-mode="normal">📖 Normal</button>
             <button class="mode-btn" data-mode="challenge">🔥 Challenge</button>
           </div>
-
-          <!-- Hearts row (challenge mode only) -->
           <div class="hearts-row" id="heartsRow" style="display:none"></div>
-
-          <p style="margin-bottom:0;font-size:0.9rem">30 questions at exam-level difficulty. Your progress is saved automatically.</p>
+          <p style="margin-bottom:0;font-size:0.9rem">30 questions at exam-level difficulty. Your progress is saved automatically. Press <kbd>?</kbd> for keyboard shortcuts.</p>
         </div>
-
         <div class="quiz-progress">
           <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
           <div class="progress-text">
@@ -128,7 +84,6 @@ Use headings, callouts, examples, code blocks, and tables as needed.
             <span id="progressScore">Score: 0 / 0</span>
           </div>
         </div>
-
         <div id="questionList"></div>
       </section>
 
@@ -136,8 +91,21 @@ Use headings, callouts, examples, code blocks, and tables as needed.
   </main>
 </div>
 
+<script src="theme.js"></script>
 <script src="nav.js"></script>
 <script src="{{DAY_QUIZ_FILE}}"></script>
+<script>
+/* publish study-day question signatures so mock-day dedup can warn */
+if(typeof QUESTIONS!=='undefined'){
+  try{
+    const sigs=QUESTIONS.map(q=>q.sig||q.text.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,60));
+    const existing=JSON.parse(localStorage.getItem('hmp_study_sigs')||'[]');
+    const merged=[...new Set([...existing,...sigs])];
+    localStorage.setItem('hmp_study_sigs',JSON.stringify(merged));
+  }catch{}
+}
+</script>
 <script src="quizlib.js"></script>
+<script>if(typeof window.registerSW==='function')window.registerSW();</script>
 </body>
 </html>
