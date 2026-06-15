@@ -3,39 +3,62 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Dark-mode pre-paint: must precede the stylesheet to prevent flash -->
+<script>
+(function(){
+  var t=localStorage.getItem('hmp_theme');
+  document.documentElement.classList.toggle(
+    'dark',
+    t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)
+  );
+})();
+</script>
 <title>Day {{DAY_NUM}} · {{DAY_TITLE}} — Study Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-day="{{DAY_NUM}}">
-<button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
-<button class="kbd-help-btn" onclick="showKbdCheatsheet()" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">⌨</button>
 <div class="app blueprint">
+  <div id="srAnnounce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="index.html" class="sidebar-logo"><span class="logo-mark">{{LOGO_3CHAR}}</span><span>Study Hub</span></a>
-      <button class="sidebar-toggle" aria-label="Close sidebar" onclick="toggleSidebar()">×</button>
+      <button class="sidebar-toggle" aria-label="Collapse sidebar" onclick="toggleNavCollapse()" title="Collapse (⌘\\)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 4l-4 4 4 4"/></svg>
+      </button>
     </div>
     <nav class="sidebar-nav" id="navRoot"></nav>
+    <div class="sb-divider"></div>
     <div class="sidebar-footer" id="xpDisplay"></div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></svg>
+      <span class="theme-label" id="themeLabel">Theme</span>
+    </button>
   </aside>
   <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
 
   <main class="main">
-    <div class="grid-ov"></div>
     <div class="mobile-bar">
-      <button onclick="toggleSidebar()">☰ Menu</button>
-      <span style="font-weight:600">Day {{DAY_NUM}}</span>
+      <button onclick="toggleSidebar()" aria-label="Open menu">Menu</button>
+      <span>Day {{DAY_NUM}}</span>
     </div>
-    <div class="main-inner" style="position:relative;z-index:1">
+    <div class="main-inner">
 
-      <section class="page-hero">
-        <div class="page-eyebrow">Day {{DAY_NUM}} · {{DAY_DOMAIN}}</div>
-        <h1 class="page-title">{{DAY_TITLE}} <span id="notesBadge" class="notes-badge"></span></h1>
-        <p class="page-meta">Roughly <strong>{{H}} hours</strong> of study + a 30-question quiz when you're ready.</p>
-      </section>
+      <header class="page-hero">
+        <div class="page-day-mono">
+          <small>Day</small>{{DAY_NUM_PADDED}}
+        </div>
+        <div>
+          <div class="page-eyebrow">
+            <span>Day <span class="cur">{{DAY_NUM}}</span> of {{N}} · {{DAY_DOMAIN}}</span>
+          </div>
+          <h1 class="page-title">{{DAY_TITLE}}<span id="notesBadge" class="notes-badge"></span></h1>
+          <p class="page-meta">Reading <strong>{{H}} hr</strong> · Quiz <strong>{{QUIZ_PER_DAY}} Q</strong>{{DOMAIN_WEIGHT_META}}</p>
+        </div>
+        <div class="page-aux" id="pageAux"></div>
+      </header>
 
       <section id="study">
         <!-- STUDY_MD constant populated below. See SKILL.md for Markdown syntax. -->
@@ -62,25 +85,26 @@ Replace this placeholder with the actual day content in Markdown format.
 
       <section id="quiz">
         <div class="quiz-intro">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px">
-            <h2 style="margin:0">Day {{DAY_NUM}} Quiz</h2>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="quiz-reset-btn" onclick="resetQuiz()" title="Reset score and re-shuffle">↺ Reset</button>
-              <button class="quiz-reset-btn" onclick="clearReviewQueue()" title="Clear spaced-review queue">🗑 Clear Review</button>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:14px">
+            <h2>Day {{DAY_NUM}} · Exercise</h2>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <button class="quiz-reset-btn btn-danger" onclick="resetQuiz(this)" title="Reset score and re-shuffle">Reset</button>
+              <button class="quiz-reset-btn btn-danger" onclick="clearReviewQueue(this)" title="Clear spaced-review queue">Clear review</button>
+              <button class="quiz-reset-btn" onclick="showKbdCheatsheet()" title="Keyboard shortcuts (?)" style="font-family:'JetBrains Mono',monospace">?</button>
             </div>
           </div>
           <div class="mode-toggle">
-            <span style="font-size:0.82rem;color:var(--mu)">Mode:</span>
-            <button class="mode-btn active" data-mode="normal">📖 Normal</button>
-            <button class="mode-btn" data-mode="challenge">🔥 Challenge</button>
+            <span>Mode</span>
+            <button class="mode-btn active" data-mode="normal">Normal</button>
+            <button class="mode-btn" data-mode="challenge">Challenge</button>
           </div>
           <div class="hearts-row" id="heartsRow" style="display:none"></div>
-          <p style="margin-bottom:0;font-size:0.9rem">30 questions at exam-level difficulty. Your progress is saved automatically. Press <kbd>?</kbd> for keyboard shortcuts.</p>
+          <p>{{QUIZ_PER_DAY}} questions at exam-level difficulty. Your progress is saved automatically. Press <kbd>?</kbd> for keyboard shortcuts.</p>
         </div>
         <div class="quiz-progress">
           <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
           <div class="progress-text">
-            <span id="progressLabel">0 of 30 answered</span>
+            <span id="progressLabel">0 of {{QUIZ_PER_DAY}} answered</span>
             <span id="progressScore">Score: 0 / 0</span>
           </div>
         </div>

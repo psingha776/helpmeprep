@@ -1,95 +1,173 @@
-# Changelog
+# helpmeprep — v1.5 Changelog
 
-All notable changes to **helpmeprep** will be documented here.
-
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All changes are in-place amendments to v1.5. No version bump to v1.6 has been made.
+Sources: four separate work sessions across May–June 2026.
 
 ---
 
-## [1.4.0] — 2026-05-22
+## Design System — Calm Tracker
 
-### Added
-- **Keyboard shortcuts** — 1–4 select choices, H toggle hint, right-arrow/N next question, ? show shortcut cheatsheet; active on study-day pages.
-- **Dark mode toggle** — moon/sun button top-right on every page; preference persisted to localStorage via theme.js.
-- **Per-question timer** — elapsed seconds shown per question; resets on next. Visible on study days only (mocks have their own countdown).
-- **Aggregate notes dashboard** — index.html now shows a collapsible notes panel listing every saved sticky note across all days, grouped by day.
-- **Domain-weighted mock scoring** — DOMAIN_WEIGHTS map populated at generation time; mock score calculated as weighted average when weights are present, simple average otherwise.
-- **Mark-for-review in mock** — flag icon per question during a mock attempt; flagged questions highlighted in the retrospection view.
-- **Service-worker offline cache** — service-worker.js pre-caches all hub assets on install; hub works fully offline after first load.
-- **First-visit sticky-note coachmark** — tooltip bubble on the first heading icon a user sees, dismissible and never shown again.
-- **Per-day note count in sidebar** — nav.js reads localStorage and displays note count next to each day link if notes exist.
-- **Quick-quiz mode** — new button on index.html that samples 10 random questions across all days for a rapid drill session.
-- **Question dedup via sig field** — 3-layer enforcement: generation-time scan, required schema field, runtime localStorage safety net in mocklib.js.
-- **New asset files** — mocklib.js (mock engine extracted from inline script), index.js (index-page logic), theme.js (dark-mode toggle), service-worker.js (offline cache).
+Complete visual identity replacement (previously Blueprint-derived).
 
-### Changed
-- **mock-template.html** — inline JS extracted to mocklib.js; template shrank from ~360 lines to ~115 lines.
-- **SKILL.md** — trimmed from ~462 lines to ~280 lines; foundation assets now cp-ed verbatim (no re-emission); DOMAIN_WEIGHTS variable added; sig field made mandatory; STUDY_MD backtick-escape step formalised as invariant; Google search query cap removed.
-- **Ask Google** — no longer appends a character cap to the search query.
-
-### Fixed
-- **STUDY_MD rendering bug** — unescaped backticks in code fences silently broke the JS template literal, causing the study section not to render and the quiz to appear only after a Reset click. Escape step added to generation protocol and locked as a key invariant.
+- **Motion vocabulary** — 5 canonical easings (`--e-out`, `--e-snap`, `--e-drawer`, `--e-in`, `--e-tactile`) × 5 durations (`--d-tap` 80ms → `--d-celebrate` 480ms). All animations derive from this set; no ad-hoc values.
+- **Action-semantic button motion** — each button class earns its animation from what the action means (`.btn` arrow translates right, `.btn-danger` two-step confirm, `.hint-btn` hairline extends, `.conf-btn` underline draws, `.choice` SVG check/cross draws on answer).
+- **Collapsible sidebar** — collapses to 56 px via `⌘\`/`Ctrl+\`; state persists to `localStorage.hmp_nav_collapsed`; icon-only tooltips on hover with 200 ms intent delay.
+- **Theme toggle** — sidebar-footer button cycles `system → light → dark → system`; `theme.js` paints sun/moon/auto SVG; floating body-level toggle removed (hidden via CSS).
+- **Keyframes** — `ambient-pulse`, `slot-flip`, `level-flash`, `bar-pulse`, `lift-fade-in`, `reveal-down`, `track-in`, `pair-pulse`, `check-draw`, `xp-rise`. Mock pages: no decorative motion.
+- **Reduced motion** — `@media (prefers-reduced-motion: reduce)` zeroes all durations; functional feedback fires instantly.
 
 ---
 
-## [1.3.0] — 2026-05-19
+## Bug Fixes
 
-v1.3 is a targeted bug-fix release addressing nine visual/rendering regressions that shipped in v1.2. All fixes are confined to assets/styles.css and assets/quizlib.js. No changes to SKILL.md protocol, question schemas, or generation flow.
+### B1 — question-bank.js never loaded (heatmap + quick-quiz dead)
+`index.html` never included a `<script src="question-bank.js">` tag, so `QUESTION_BANK` was `undefined` at runtime. Both the domain heatmap and the quick-quiz feature were silently non-functional since v1.4.
+**Fix:** Step 6 Python substitution wires `<script src="question-bank.js"></script>` before `index.js`. `question-bank.js` is assembled mechanically at the end of Step 7 (see Process section) — questions are never re-emitted into context.
 
-### Fixed
+### B2 — service-worker.js missing (offline cache dead)
+`cp` in Step 6 referenced `service-worker.js` but no such asset existed, causing silent failure. Offline caching had never worked.
+**Fix:** Step 6 generates `service-worker.js` per-hub via a Python block. Cache name is `{SLUG}-v1` (unique per hub; old caches evicted on `activate`). Google Fonts excluded from pre-cache.
 
-- **styles.css — Blueprint theme inactive on day pages** — .app.blueprint block was a no-op; day pages rendered in old dark theme. Added complete remapping of token aliases and a body:has(.app.blueprint) rule.
-- **styles.css — .mode-btn unstyled** — Normal / Challenge toggle had browser defaults only. Redesigned as segmented pill capsule.
-- **styles.css — .hint-btn, .hint-box, .hint-label unstyled** — hint UI had zero CSS. Styled with amber pill, tinted reveal container, uppercase tier label.
-- **styles.css — .choice.hint-greyed rule missing** — quizlib.js injected this class but no rule backed it; greyed choice remained visible. Added opacity/pointer-events/filter.
-- **styles.css — .btn link colour leak** — global anchor rule caused .btn-wrapped anchors to show indigo text on indigo button. Scoped to a:not(.btn) and added .blueprint .btn { color: #fff }.
-- **styles.css — .conf-btn, .conf-row, .conf-label unstyled** — confidence row had no CSS. Applied traffic-light semantics: Guessed=coral, Sure=amber, Certain=emerald.
-- **quizlib.js — renderMatch() partial re-render bug** — already-matched pairs re-rendered as live buttons. Fixed by building matched Sets and immediately locking with correct-pair + disabled classes.
-- **styles.css — match/order/fill-blank completely unstyled** — all interactive classes for the three non-MCQ types had zero CSS. Full styling pass added.
-- **quizlib.js — inlineFmt() lacked Markdown link regex** — [text](url) rendered as raw text. Regex added before bold/italic/code replacements.
+### B3 — Order questions broken on touch/mobile
+Sequence questions relied solely on drag-and-drop, which is unsupported on iOS/Android browsers.
+**Fix:** Move-up/move-down arrow buttons added to each item in `quizlib.js`; keyboard-accessible and touch-compatible. CSS for `.order-btn` added to `styles.css`.
 
-### Not changed
-- SKILL.md, assets/nav.js, assets/index-template.html, assets/day-template.html, assets/mock-template.html.
+### B4 — Dark-mode FOUC (flash of unstyled content)
+`theme.js` loaded at `</body>`, so the page rendered in light mode before the script applied the stored dark preference — visible flash on every page load in dark mode.
+**Fix:** A 5-line pre-paint `<script>` block added to `<head>` in all three templates (`index-template.html`, `day-template.html`, `mock-template.html`). Reads `localStorage.hmp_theme` and applies the `html.dark` class synchronously before any paint.
 
----
+### B5 — Mock retry unimplemented; dead `#pageDots` DOM
+Mock retry was specified in the original §10c design but never built. `mocklib.js` had no `retryMock()` function. `#pageDots` was referenced in template JS but the DOM element did not exist.
+**Fix:** `retryMock(n)` implemented in `mocklib.js`; `sessionStorage.hmp_mock_canvas_shown` guards against the completion canvas re-firing on retry. Dead `#pageDots` DOM removed from `day-template.html`.
 
-## [1.2.0] — 2026-05-17
+### B6 — Mock pre-submit choice not highlighted
+No CSS rule existed for `.choice.selected` during an active (pre-submit) attempt, so selected answers showed no visual confirmation until submission.
+**Fix:** `.choice.selected:not(.correct):not(.wrong):not(.reveal-correct)` rule added to `styles.css`.
 
-### Added
-- Spaced Repetition Queue, Confidence Self-Rating, XP + Levels, Streak Tracking, Tiered Hints, Domain Heatmap, Match/Order/Fill-Blank question types, Lives/Challenge Mode, Ask Google, Inline Sticky Notes, Mock Completion Canvas, Mock Retrospection Mode, Mock Retry Mode.
+### B7 — Ask Google missing from mock post-submit
+The "Ask Google for explanation" affordance existed in study-day quizzes but was absent from mock retrospection.
+**Fix:** `buildMockAskGoogle()` helper added to `mocklib.js`, wired into both `submitMock()` and `restoreAnswers()`.
 
-### Changed
-- SKILL.md — major revision for all v1.2 features. Blueprint Design System replacing old dark theme. Sidecar split batch protocol (dayN.html + dayN-quiz.js per turn). explanations array abolished in favour of single explanation string.
-
----
-
-## [1.1.0] — 2026-05-13
-
-### Added
-- Show-all-explanations panel, answer locking, localStorage persistence, Reset & Shuffle button, confetti celebration.
-
-### Changed
-- assets/quizlib.js complete rewrite, assets/day-template.html, assets/styles.css (114 new lines), SKILL.md updated.
+### B8 — MCQ cross-reference invariant
+Wrong-choice text occasionally referenced sibling choices by position letter (e.g., "Both A and B"), which broke after runtime shuffling.
+**Fix:** Generation-time invariant added to `SKILL.md` — no MCQ choice may reference another choice by letter. Any such reference must be replaced with the actual text of the referenced choice inline.
 
 ---
 
-## [1.0.0] — 2026-05-11
+## Process / Efficiency
 
-### Added
-- SKILL.md, assets/styles.css, assets/quizlib.js, assets/nav.js, assets/index-template.html, assets/day-template.html, assets/mock-template.html, README.md, CONTRIBUTING.md, LICENSE, .gitignore, CHANGELOG.md.
+### R1 — Stop reading verbatim assets at Step 1.3
+Step 1.3 previously told Claude to read all assets into context, including `styles.css` (68 KB), `quizlib.js` (40 KB), `mocklib.js` (16 KB), `index.js` (16 KB), `theme.js`, and `service-worker.js` — then copy them verbatim via `cp`. Approximately 40 K tokens were burned per invocation for content Claude never used.
+**Fix:** Step 1.3 now reads only the four substitutable templates (`index-template.html`, `day-template.html`, `mock-template.html`, `nav.js`). All verbatim assets are `cp`-ed without being read. Rule added to Key Invariants: "Foundation assets are `cp`-ed verbatim — NEVER use `create_file` to retype them."
+
+### R2 — One turn per study day
+Previously, each study-day HTML page and its sidecar `dayN-quiz.js` were produced in separate turns, doubling turn count for long hubs.
+**Fix:** Each study day now co-produces both files in a single turn (write `dayN.html` + write `dayN-quiz.js`, then `present_files [dayN.html, dayN-quiz.js]`, then end the turn).
+
+### R3 — Mechanical question-bank.js assembly
+Previously, `question-bank.js` was generated by re-emitting all question content, consuming tokens proportional to the total question count of the hub.
+**Fix:** `question-bank.js` is assembled at the end of Step 7 by a Python script that extracts `QUESTIONS` array literals from each sidecar file via regex — zero question re-emission. Mock arrays extracted from `dayN.html` by the same script.
+
+### R4 — Trim frontmatter description
+Frontmatter description was verbose (multi-sentence, named every feature). Reduced to a single trigger-oriented sentence.
 
 ---
 
-## [Unreleased]
+## Enhancements
 
-_Nothing yet — contributions welcome._
+### E1 — Wall-clock mock timer
+`setInterval` decrement drifts when the browser tab is backgrounded, causing the timer to run slow.
+**Fix:** Timer now records `endTime = Date.now() + (seconds * 1000)` at start and recomputes `remaining = endTime - Date.now()` on each tick. Accurate regardless of backgrounding.
+
+### E2 — Quiz load-failure guard
+If `dayN-quiz.js` failed to load (e.g., missing file), the quiz area was silently blank with no error.
+**Fix:** `quizlib.js` detects load failure and renders an explicit error panel prompting the user to check the file path.
+
+### E3 — Accessibility (focus-visible, aria-live, sr-only, focus restore)
+- `focus-visible` ring added to all interactive elements via CSS (`:focus-visible` outline rule).
+- `aria-live="polite"` announce region added to all three templates for screen-reader feedback.
+- `.sr-only` utility class added to `styles.css`.
+- Focus restored to the first interactive element after quiz re-renders in `quizlib.js`.
+
+### E4 — Print stylesheet
+`@media print` rules added to `styles.css`: hides sidebar, buttons, and interactive controls; expands content to full width; ensures clean page breaks.
+
+### E5 — `{{QUIZ_PER_DAY}}` placeholder
+`day-template.html` had the quiz count hardcoded as `"30"` in the page meta. Now uses `{{QUIZ_PER_DAY}}` which is substituted at Step 6 from the tunable variable.
+
+### E6 — Hint derivation leak fix
+The Level-3 hint was derived by taking the first 8 words of the `explanation` field, which often produced a fragment that gave away the answer.
+**Fix:** Hint derivation logic in `quizlib.js` now explicitly excludes sentences from the `explanation` field. L3 hint is a conceptual scaffold, never an explanation excerpt.
+
+### E7 — Specific `{{token}}` error reporting
+The pre-present `{{` scan rule previously required only a count of unresolved tokens. Counting alone masked which tokens were missed.
+**Fix:** Rule now requires each unresolved token to be named explicitly (e.g., `{{DAY_TITLE}}`, `{{MOCK1_QUESTIONS_START}}`). File must not be presented until all are resolved.
 
 ---
 
-<!-- Links -->
-[1.4.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.4
-[1.3.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.3
-[1.2.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.2
-[1.1.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.1.0
-[1.0.0]: https://github.com/psingha776/helpmeprep/releases/tag/v1.0.0
+## Authoring Rules
+
+### A1 — Distractor sourcing rule
+Before writing MCQ choices, Claude must scan the source document and the day's study content for explicitly-stated wrong approaches, anti-patterns, or common mistakes. These become the distractors. Invented distractors are only permitted when the source has no stated anti-patterns for the topic.
+
+### A2 — Length parity rule
+All four MCQ choices must be within ±25% word count of each other. A short correct answer beside long distractors (or vice versa) leaks the answer by length.
+
+### A3 — Question-count invariants
+`QUESTIONS` array must always contain exactly `QUIZ_PER_DAY` entries. Review-pool cards are injected at runtime by `quizlib.js` and are additive — they must never reduce the authored count. `MOCK1` and `MOCK2` must each contain exactly `JD_MOCK_QUESTIONS` entries. No spaced-repetition injection occurs in mocks.
+
+---
+
+## Pedagogical Authoring Rules (final amendment)
+
+Based on evidence-based learning-science research and competitor-tool benchmarking (Anki, UWorld, Khan Academy, Brilliant).
+
+### P1 — MCQ explanation format (two-part)
+Previous: one 60-word paragraph explaining why the correct answer is right and briefly why one distractor is wrong.
+**New:** Two-part format — (1) one sentence: why the correct answer is right; (2) one line per wrong choice identified by a short content excerpt (never a position letter — choices are shuffled at runtime), explaining why it is wrong. `EXPLANATION_MAX_WORDS` raised from 60 to 80. The "Ask Google" button handles detailed elaboration; this field stays terse.
+
+### P2 — Bloom taxonomy mix
+Across each day's 23 MCQs: ~30% Remember/Understand (direct recall stem), ~50% Apply (scenario vignette: 1–2 sentence real-world situation then the question; stem must be answerable without seeing choices), ~20% Analyse/Evaluate (compare approaches, diagnose a misconfiguration, predict an outcome). Apply and Analyse items require scenario text in the `text` field.
+
+### P3 — Mayer/Sweller reading structure
+Every study-day reading section must follow this structure:
+1. **Key Terms block first** — `> [!info] Key Terms` callout with 5–8 anchor concepts defined, before the first `##` heading.
+2. **Segment into ~300-word sections** — each `##` heading covers one concept in ~300 words, ending with an inline self-check (`> [!info] Quick Check` → question / answer).
+3. **Signal** — bold each key term on first use only; `> [!warn]` for critical distinctions.
+4. **Worked example** — at least one fully-fleshed concrete example per concept (`EXAMPLE:` prefix).
+5. **Anti-pattern** — 1–2 sentence note after each example showing what commonly goes wrong.
+6. **Coherence** — cut any interesting-but-irrelevant tangent; if a fact is not testable or exam-relevant, remove it.
+
+### P4 — Worked-example fading (Sweller)
+For procedural content (step-by-step processes, configs, algorithms), calibrated by `x`:
+- x 0–4: 2 full examples → 1 partial (last step as `[?]`) → 1 unscaffolded problem.
+- x 5–7: 1 full → 1 partial → 1 unscaffolded.
+- x 8–10: 1 full → 1 unscaffolded (expertise-reversal — excess scaffolding hurts experts).
+
+### P5 — Quiz type breakdown change
+`QUIZ_TYPE_BREAKDOWN` changed from `{ mcq: 24, match: 2, order: 2, fillblank: 2 }` to `{ mcq: 23, match: 1, order: 2, fillblank: 4 }`. Rationale: fill-blank forces recall (produce-the-term); match-pairs test low-level association and are easy to game by elimination. Total remains 30.
+
+### P6 — Fill-blank authoring rule
+Fill-blank questions must test specific, nameable terms or procedure steps — not vague concepts. The `wordBank` must contain plausible near-correct terms (synonyms, related-but-distinct concepts), not obviously wrong fillers. Target per day: 2 terminological (key concept names), 1 procedural (a step in a sequence), 1 configurational (a specific value, flag, or parameter).
+
+### P7 — Domain interleaving
+The `QUESTIONS` array must interleave domains throughout — no more than 2 consecutive questions from the same domain. Mix question types across domains. Rationale: interleaving forces discrimination between concepts, producing stronger encoding than blocked practice.
+
+### P8 — Hypercorrection priority (review queue)
+`quizlib.js` flags certain-but-wrong (false-certainty) answers and routes them to the spaced-repetition review pool. These items surface first within the daily review queue on subsequent days. High-confidence errors are corrected more reliably once caught (hypercorrection effect) and are the highest-value review targets.
+
+---
+
+## Files Changed
+
+| File | Changes |
+|---|---|
+| `SKILL.md` | R1, R2, R3, R4, E5, E7, B1 (script tag), B2 (SW generation), B8, A1, A2, A3, P1–P8 |
+| `index-template.html` | B1 (script tag), B4 (FOUC), E3 (aria-live) |
+| `day-template.html` | B4 (FOUC), B5 (remove page-dots), E3 (aria-live), E5 (QUIZ_PER_DAY) |
+| `mock-template.html` | B4 (FOUC), E3 (aria-live) |
+| `quizlib.js` | B3 (order buttons), E2 (load guard), E3 (focus-visible + aria + focus restore), E6 (hint leak) |
+| `mocklib.js` | B5 (retry), B7 (Ask Google post-submit), E1 (wall-clock timer) |
+| `styles.css` | B3 (order-btn), B6 (choice.selected), E2 (load-error), E3 (focus-visible, sr-only), E4 (print), Calm Tracker full design token set + keyframes |
+| `service-worker.js` | B2 — new file, generated per-hub at Step 6 |
+| `question-bank.js` | B1 — assembled mechanically at Step 7, never re-emitted |

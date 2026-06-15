@@ -3,50 +3,78 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Dark-mode pre-paint: must precede the stylesheet to prevent flash -->
+<script>
+(function(){
+  var t=localStorage.getItem('hmp_theme');
+  document.documentElement.classList.toggle(
+    'dark',
+    t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)
+  );
+})();
+</script>
 <title>Day {{DAY_NUM}} · Mock Tests — Study Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-day="{{DAY_NUM}}">
-<button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
 <div class="app blueprint">
+  <div id="srAnnounce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="index.html" class="sidebar-logo"><span class="logo-mark">{{LOGO_3CHAR}}</span><span>Study Hub</span></a>
-      <button class="sidebar-toggle" aria-label="Close sidebar" onclick="toggleSidebar()">×</button>
+      <button class="sidebar-toggle" aria-label="Collapse sidebar" onclick="toggleNavCollapse()" title="Collapse (⌘\\)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 4l-4 4 4 4"/></svg>
+      </button>
     </div>
     <nav class="sidebar-nav" id="navRoot"></nav>
+    <div class="sb-divider"></div>
     <div class="sidebar-footer" id="xpDisplay"></div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></svg>
+      <span class="theme-label" id="themeLabel">Theme</span>
+    </button>
   </aside>
   <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
 
   <main class="main">
-    <div class="grid-ov"></div>
     <div class="mobile-bar">
-      <button onclick="toggleSidebar()">☰ Menu</button>
-      <span style="font-weight:600">Day {{DAY_NUM}} · Mocks</span>
+      <button onclick="toggleSidebar()" aria-label="Open menu">Menu</button>
+      <span>Day {{DAY_NUM}} · Mocks</span>
     </div>
-    <div class="main-inner" style="position:relative;z-index:1">
+    <div class="main-inner">
 
-      <section class="page-hero">
-        <div class="page-eyebrow">Day {{DAY_NUM}} · Final Stretch</div>
-        <h1 class="page-title">Mock Tests</h1>
-        <p class="page-meta">Two full-length timed mocks at exam difficulty. <strong>{{MOCK_QCOUNT}} questions</strong> · <strong>{{MOCK_MINUTES}} minutes</strong> each · pass mark <strong>{{MOCK_PASSMARK}}</strong>.</p>
-        <p style="font-size:0.82rem;color:var(--mu);margin-top:6px">ℹ️ Your answers, flags, and timer are saved automatically — refreshing the page resumes your session.</p>
-      </section>
+      <header class="page-hero">
+        <div class="page-day-mono" style="color:var(--primary)">
+          <small>Mock</small>{{DAY_NUM_PADDED}}
+        </div>
+        <div>
+          <div class="page-eyebrow" style="color:var(--primary)">Final Stretch · Day {{DAY_NUM}} of {{N}}</div>
+          <h1 class="page-title">Mock Tests</h1>
+          <p class="page-meta">Two full-length timed mocks at exam difficulty. <strong>{{MOCK_QCOUNT}} questions</strong> · <strong>{{MOCK_MINUTES}} minutes</strong> each · pass mark <strong>{{MOCK_PASSMARK}}</strong>.</p>
+        </div>
+        <div class="page-aux">
+          autosave on<br>resumes on reload
+        </div>
+      </header>
 
-      <section class="callout info" style="margin-bottom:24px">
-        <div class="callout-title">📝 Before you begin</div>
-        <p style="margin-bottom:0">Review your notes from study days on the <a href="index.html#notes">home page</a>. <span style="opacity:0.85">Quick-quiz with 5 random questions from any day:</span> <a href="index.html#quickquiz">try a quick quiz</a>.</p>
+      <section class="callout info" style="margin-bottom:32px">
+        <div class="callout-title">Before you begin</div>
+        <p>Review your notes from study days on the <a href="index.html#notes">home page</a>. Or try a quick 5-question warmup from any day's bank: <a href="index.html#quickquiz">quick quiz</a>.</p>
       </section>
 
       <section id="mock1">
         <div class="quiz-intro" id="mock1Intro">
           <h2>Mock Test 1</h2>
-          <p style="margin-bottom:0">Click <em>Start Mock 1</em> when you're ready. The timer begins immediately.</p>
-          <div style="margin-top:14px"><button class="btn" onclick="startMock(1)">▶ Start Mock 1</button></div>
+          <p>Click <em style="font-family:'Newsreader',serif">Start Mock 1</em> when you're ready. The timer begins immediately.</p>
+          <div style="margin-top:16px">
+            <button class="btn" onclick="startMock(1)">
+              Start Mock 1
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+            </button>
+          </div>
         </div>
         <div id="mock1Body" style="display:none">
           <div class="mock-controls">
@@ -56,16 +84,21 @@
           </div>
           <div class="flag-panel" id="mock1FlagPanel" style="display:none"></div>
           <div id="mock1Questions"></div>
-          <div style="text-align:center;margin:24px 0"><button class="btn" onclick="submitMock(1)">Submit Mock 1</button></div>
+          <div style="text-align:center;margin:28px 0"><button class="btn" onclick="submitMock(1)">Submit Mock 1</button></div>
           <div class="results" id="mock1Results"></div>
         </div>
       </section>
 
-      <section id="mock2" style="margin-top:48px">
+      <section id="mock2" style="margin-top:56px">
         <div class="quiz-intro" id="mock2Intro">
           <h2>Mock Test 2</h2>
-          <p style="margin-bottom:0">A second, independently-shuffled set. Take it after a break.</p>
-          <div style="margin-top:14px"><button class="btn" onclick="startMock(2)">▶ Start Mock 2</button></div>
+          <p>A second, independently-shuffled set. Take it after a break.</p>
+          <div style="margin-top:16px">
+            <button class="btn" onclick="startMock(2)">
+              Start Mock 2
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+            </button>
+          </div>
         </div>
         <div id="mock2Body" style="display:none">
           <div class="mock-controls">
@@ -75,7 +108,7 @@
           </div>
           <div class="flag-panel" id="mock2FlagPanel" style="display:none"></div>
           <div id="mock2Questions"></div>
-          <div style="text-align:center;margin:24px 0"><button class="btn" onclick="submitMock(2)">Submit Mock 2</button></div>
+          <div style="text-align:center;margin:28px 0"><button class="btn" onclick="submitMock(2)">Submit Mock 2</button></div>
           <div class="results" id="mock2Results"></div>
         </div>
       </section>
@@ -87,11 +120,8 @@
 <script src="theme.js"></script>
 <script src="nav.js"></script>
 <script>
-/* ── CONFIG (substituted by skill generation) ── */
 const MOCK_MINUTES  = {{MOCK_MINUTES}};
 const MOCK_PASSMARK = {{MOCK_PASSMARK_NUM}};
-/* DOMAIN_WEIGHTS: optional. Example: { "Agent Architecture":0.27, "Prompt Engineering":0.20, ... }
-   If empty {} (e.g. JD source) the mock falls back to raw percentage scoring. */
 const DOMAIN_WEIGHTS = {{DOMAIN_WEIGHTS_JSON}};
 
 /* {{MOCK1_QUESTIONS_START}} */
@@ -108,8 +138,6 @@ const MOCK2 = [
 /* {{MOCK2_QUESTIONS_END}} */
 </script>
 <script src="mocklib.js"></script>
-<script>
-if(typeof window.registerSW==='function')window.registerSW();
-</script>
+<script>if(typeof window.registerSW==='function')window.registerSW();</script>
 </body>
 </html>

@@ -3,85 +3,131 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Dark-mode pre-paint: must precede the stylesheet to prevent flash -->
+<script>
+(function(){
+  var t=localStorage.getItem('hmp_theme');
+  document.documentElement.classList.toggle(
+    'dark',
+    t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches)
+  );
+})();
+</script>
 <title>{{HUB_TITLE}} · Study Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
 <div class="app blueprint">
+  <div id="srAnnounce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="index.html" class="sidebar-logo"><span class="logo-mark">{{LOGO_3CHAR}}</span><span>Study Hub</span></a>
-      <button class="sidebar-toggle" aria-label="Close sidebar" onclick="toggleSidebar()">×</button>
+      <button class="sidebar-toggle" aria-label="Collapse sidebar" onclick="toggleNavCollapse()" title="Collapse (⌘\\)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 4l-4 4 4 4"/></svg>
+      </button>
     </div>
     <nav class="sidebar-nav" id="navRoot"></nav>
-    <div class="sidebar-footer">Target: <strong style="color:var(--text-secondary)">{{TARGET_LABEL}}</strong></div>
+    <div class="sb-divider"></div>
+    <div class="sidebar-footer" id="xpDisplay">Target · <strong>{{TARGET_LABEL}}</strong></div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></svg>
+      <span class="theme-label" id="themeLabel">Theme</span>
+    </button>
   </aside>
   <div class="backdrop" id="backdrop" onclick="toggleSidebar()"></div>
 
   <main class="main">
-    <div class="grid-ov"></div>
-    <div class="mobile-bar"><button onclick="toggleSidebar()">☰ Menu</button><span style="font-weight:600">{{HUB_TITLE}}</span></div>
-    <div class="main-inner" style="position:relative;z-index:1">
+    <div class="mobile-bar">
+      <button onclick="toggleSidebar()" aria-label="Open menu">Menu</button>
+      <span>{{HUB_TITLE}}</span>
+    </div>
+    <div class="main-inner">
 
       <section class="hero">
-        <div class="hero-eyebrow">{{N}}-Day Sprint · Self-paced</div>
-        <h1 class="hero-title">{{HUB_TITLE}}</h1>
-        <p class="hero-sub">{{HUB_SUBTITLE}}</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a href="day1.html" class="btn">Start Day 1 →</a>
-          <button class="btn btn-secondary" onclick="startQuickQuiz()">🎲 5-Question Quick Quiz</button>
+        <div>
+          <div class="h-kicker"><span class="h-kicker-dot"></span><span id="kickerText">Loading your progress…</span></div>
+          <h1 class="hero-title">{{HUB_TITLE}}</h1>
+          <p class="hero-sub">{{HUB_SUBTITLE}}</p>
+          <div class="hero-ctas">
+            <a href="day1.html" class="btn" id="primaryCta">
+              <span id="primaryCtaText">Start Day 1</span>
+              <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+            </a>
+            <button class="btn-secondary" onclick="startQuickQuiz()">5-question quick quiz</button>
+          </div>
+          <div class="hero-cta-detail" id="ctaDetail"></div>
+        </div>
+        <div class="kpi-stack" id="kpiStack">
+          <div class="kpi">
+            <div class="kpi-label">Complete</div>
+            <div>
+              <div class="kpi-value" data-target="0"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="kpi-sub" id="kpiCompleteSub">0 of {{TOTAL_QUIZ_Q}} Q</div>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Accuracy</div>
+            <div>
+              <div class="kpi-value" data-target="0"><span class="num">—</span><span class="unit"></span></div>
+              <div class="kpi-sub" id="kpiAccSub">no answers yet</div>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Streak</div>
+            <div>
+              <div class="kpi-value warm" data-target="0"><span class="num">0</span><span class="unit">d</span></div>
+              <div class="kpi-sub" id="kpiStreakSub">start today</div>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Target</div>
+            <div>
+              <div class="kpi-value dim">{{TARGET_LABEL}}</div>
+              <div class="kpi-sub" id="kpiTargetSub">{{TARGET_SUB}}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-head">
+          <span class="sec-label">The Plan</span>
+          <span class="sec-aux">{{N}} days · {{TOTAL_QUIZ_Q}} questions · 2 mocks</span>
+        </div>
+        <div class="day-grid">
+<!-- {{DAY_TILES_START}} One <a class="day-tile" href="dayN.html"> per day, last tile gets class .mock. See SKILL.md for inner structure. {{DAY_TILES_END}} -->
         </div>
       </section>
 
       <section>
-        <div class="day-grid">
-          <!-- {{DAY_TILES_START}} One <a class="day-tile" href="dayN.html"> per day, mock-styled tile for day n. {{DAY_TILES_END}} -->
+        <div class="bigidea">
+          <span class="bigidea-label">The big idea</span>
+          <div class="bigidea-body">Read every distractor's explanation, <em>especially when you got the answer right.</em> The wrong-answer rationales are where the material's preferred mental models reveal themselves.</div>
         </div>
       </section>
 
-      <section class="card">
-        <h2 style="margin-top:0">How to use this hub</h2>
-        <p>Each day's page is split into <strong>Study</strong> and <strong>Quiz</strong>. Pick a quiet block of about <strong>{{H}} hours</strong> for the study material, then attempt the 30-question quiz at your own pace.</p>
-        <p>On Day {{N}} you'll find two full-length timed mock exams. Hit the pass mark a few times in a row and you're ready.</p>
-        <div class="badges">{{HUB_BADGES}}</div>
-      </section>
-
-      <!-- ── DOMAIN MASTERY HEATMAP ── -->
-      <section class="heatmap-section">
-        <div class="overline">Progress</div>
-        <h2 style="margin:4px 0 12px">📊 Domain Mastery</h2>
+      <section class="sec heatmap-section">
+        <div class="sec-head"><span class="sec-label">Domain Mastery</span><span class="sec-aux">% correct per domain per day</span></div>
         <div id="heatmapHost"></div>
       </section>
 
-      <!-- ── CONFIDENCE CALIBRATION ── -->
-      <section class="calibration-section">
-        <div class="overline">Metacognition</div>
-        <h2 style="margin:4px 0 12px">🎯 Confidence Calibration</h2>
-        <p style="font-size:0.88rem;color:var(--mu);margin:0 0 12px">How often do your answers match your stated confidence? Well-calibrated learners are right about as often as they feel they are.</p>
+      <section class="sec calibration-section">
+        <div class="sec-head"><span class="sec-label">Confidence Calibration</span><span class="sec-aux">do your answers match how sure you feel?</span></div>
         <div id="calibrationHost"></div>
       </section>
 
-      <!-- ── NOTES DASHBOARD ── -->
-      <section class="notes-dash" id="notes">
-        <div class="overline">Your Notes</div>
-        <h2 style="margin:4px 0 12px">📝 Sticky Notes by Day</h2>
+      <section class="sec notes-dash" id="notes">
+        <div class="sec-head"><span class="sec-label">Your Notes</span><span class="sec-aux" id="notesCount">—</span></div>
         <div id="notesHost"></div>
-      </section>
-
-      <section class="callout info">
-        <div class="callout-title">Tip</div>
-        <p style="margin-bottom:0">Read every distractor's explanation — even when you got the answer right. The wrong-answer rationales are where the material's preferred mental models reveal themselves.</p>
       </section>
 
     </div>
   </main>
 </div>
 
-<!-- Quick Quiz Modal -->
 <div id="quickQuizModal" class="qq-modal" style="display:none">
   <div class="qq-inner">
     <button class="qq-close" onclick="closeQuickQuiz()" aria-label="Close">×</button>
@@ -91,12 +137,13 @@
 
 <script src="theme.js"></script>
 <script>
-/* Domain config — substituted by generator. Empty {} when source has no weight info. */
 const HEATMAP_DOMAINS = {{HEATMAP_DOMAINS_JSON}};
 const DOMAIN_WEIGHTS  = {{DOMAIN_WEIGHTS_JSON}};
 const TOTAL_DAYS      = {{N}};
+const TOTAL_QUIZ_Q    = {{TOTAL_QUIZ_Q}};
 </script>
 <script src="nav.js"></script>
+<script src="question-bank.js"></script>
 <script src="index.js"></script>
 <script>if(typeof window.registerSW==='function')window.registerSW();</script>
 </body>
